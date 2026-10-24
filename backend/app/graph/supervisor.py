@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.config import settings
 from app.db.repositories.runs import create_routing_log
+from app.graph.budgets import detect_routing_repeat, is_step_budget_exceeded
 from app.graph.decisions import NodeName, SupervisorDecision
 from app.graph.state import ContentState, TaskDict
 
@@ -175,10 +176,64 @@ async def supervisor_node(
     6. Logs routing decision to database if session provided.
     7. Returns state updates.
     """
-    eligible_nodes = calculate_eligible_nodes(state)
     step_number = state.get("execution_steps", 0) + 1
     run_id = state.get("run_id", "")
     from_node = state.get("next_action", "supervisor")
+
+    # Check 1: Step budget enforcement (UT-04 / ARCHITECTURE.md Section 10)
+    budget_exceeded, budget_reason = is_step_budget_exceeded(state)
+    if budget_exceeded:
+        if db_session and run_id:
+            try:
+                create_routing_log(
+                    db=db_session,
+                    run_id=run_id,
+                    step_number=step_number,
+                    from_node=from_node,
+                    to_node="END",
+                    reason=budget_reason or "Step budget exceeded",
+                    decided_by="code",
+                    eligible_nodes=["END"],
+                    output_status="valid",
+                )
+            except Exception as e:
+                logger.warning("Failed to record routing log: %s", e)
+        return {
+            "next_action": "END",
+            "stop_reason": "step_budget_exceeded",
+            "degraded": True,
+            "degraded_reason": budget_reason,
+            "execution_steps": step_number,
+        }
+
+    # Check 2: Repeat cycle detection (UT-05 / ARCHITECTURE.md Section 3.4)
+    route_history = state.get("route_history", [])
+    repeat_detected, repeat_reason = detect_routing_repeat(route_history)
+    if repeat_detected:
+        if db_session and run_id:
+            try:
+                create_routing_log(
+                    db=db_session,
+                    run_id=run_id,
+                    step_number=step_number,
+                    from_node=from_node,
+                    to_node="END",
+                    reason=repeat_reason or "Repeat cycle detected",
+                    decided_by="code",
+                    eligible_nodes=["END"],
+                    output_status="valid",
+                )
+            except Exception as e:
+                logger.warning("Failed to record routing log: %s", e)
+        return {
+            "next_action": "END",
+            "stop_reason": "repeat_detected",
+            "degraded": True,
+            "degraded_reason": repeat_reason,
+            "execution_steps": step_number,
+        }
+
+    eligible_nodes = calculate_eligible_nodes(state)
 
     # Case 1: Exactly 1 eligible node -> No LLM call needed (UT-03)
     if len(eligible_nodes) == 1:

@@ -33,10 +33,11 @@ Planning is complete in draft form. No code has been written yet.
 - DB-02 completed: Configured SQLite pragmas (`foreign_keys = ON`, `journal_mode = WAL`, `busy_timeout = 5000`) on SQLite engine connections and authored repository modules in `backend/app/db/repositories/` covering `creator`, `settings`, `runs`, `content`, and `plans`. Verified with 26 unit tests covering channel isolation (ADR-032), versioning, and approvals.
 - GRAPH-01 completed: Defined `ContentState` TypedDict and Pydantic decision models (`SupervisorDecision`, `CriticEvaluationDecision`, `DepthIncreaseDecision`, `TaskUpdate`) with strict constraints and extra field forbidding. Verified with 32 unit tests.
 - GRAPH-02 completed: Built Supervisor node with deterministic code-calculated node eligibility (`calculate_eligible_nodes`), single-node direct routing without LLM calls (UT-03), structured model choice (`think=False`), bounded single-retry validation, deterministic code fallback (`get_deterministic_default_node`), run degradation marking, and routing log persistence. Verified with 37 unit tests.
+- GRAPH-03 completed: Added depth level step budgets (`Quick`: 15, `Standard`: 30, `Deep`: 50 per ADR-015/Section 10) and repeat detection algorithms (consecutive 3-node, 2-node alternating cycle, 3-node cycle per UT-04 and UT-05) halting execution with `stop_reason` and writing audit logs to SQLite. Verified with 40 unit tests.
 
 ## Current task
 
-GRAPH-03: Add the step budget, repeat detection and the routing log
+GRAPH-04: Add the SQLite checkpointer in its own database file
 
 ## Key decisions in force
 

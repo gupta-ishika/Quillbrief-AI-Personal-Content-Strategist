@@ -178,3 +178,72 @@ async def test_supervisor_valid_model_decision(db_session: Session) -> None:
         assert log is not None
         assert log.output_status == "valid"
         assert log.to_node == "listener"
+
+
+@pytest.mark.asyncio
+async def test_ut04_step_budget_enforcement(db_session: Session) -> None:
+    """UT-04: The run stops at the depth level's step limit with stop_reason set."""
+    # Test for 'quick' depth level limit (15 steps)
+    state_quick_at_limit: ContentState = {
+        "run_id": "run_budget_quick",
+        "depth_level": "quick",
+        "execution_steps": 15,
+        "next_action": "listener",
+    }
+    updates = await supervisor_node(state_quick_at_limit, db_session=db_session)
+    assert updates["next_action"] == "END"
+    assert updates["stop_reason"] == "step_budget_exceeded"
+    assert updates["degraded"] is True
+    assert "limit reached" in updates["degraded_reason"]
+
+    # Verify routing log was written to SQLite
+    log = db_session.query(RoutingLog).filter_by(run_id="run_budget_quick").first()
+    assert log is not None
+    assert log.to_node == "END"
+    assert "limit reached" in log.reason
+
+    # Test for 'standard' depth level limit (30 steps)
+    state_standard_at_limit: ContentState = {
+        "run_id": "run_budget_std",
+        "depth_level": "standard",
+        "execution_steps": 30,
+        "next_action": "research",
+    }
+    updates_std = await supervisor_node(state_standard_at_limit, db_session=db_session)
+    assert updates_std["next_action"] == "END"
+    assert updates_std["stop_reason"] == "step_budget_exceeded"
+
+
+@pytest.mark.asyncio
+async def test_ut05_repeat_detection_consecutive(db_session: Session) -> None:
+    """UT-05: Repeated routing between the same nodes is detected and stops."""
+    # 3 consecutive identical nodes
+    state_consecutive: ContentState = {
+        "run_id": "run_repeat_01",
+        "depth_level": "standard",
+        "execution_steps": 5,
+        "route_history": ["listener", "research", "research", "research"],
+        "next_action": "research",
+    }
+    updates = await supervisor_node(state_consecutive, db_session=db_session)
+    assert updates["next_action"] == "END"
+    assert updates["stop_reason"] == "repeat_detected"
+    assert updates["degraded"] is True
+    assert "Consecutive routing repeat" in updates["degraded_reason"]
+
+
+@pytest.mark.asyncio
+async def test_ut05_repeat_detection_cycle(db_session: Session) -> None:
+    """UT-05: 2-node ping-pong routing cycle is detected and stops."""
+    state_cycle: ContentState = {
+        "run_id": "run_repeat_02",
+        "depth_level": "standard",
+        "execution_steps": 6,
+        "route_history": ["listener", "research", "listener", "research"],
+        "next_action": "listener",
+    }
+    updates = await supervisor_node(state_cycle, db_session=db_session)
+    assert updates["next_action"] == "END"
+    assert updates["stop_reason"] == "repeat_detected"
+    assert updates["degraded"] is True
+    assert "ping-pong" in updates["degraded_reason"]
