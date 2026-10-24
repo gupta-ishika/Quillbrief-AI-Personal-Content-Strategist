@@ -27,10 +27,11 @@ Planning is complete in draft form. No code has been written yet.
 - API-00 completed: Created full field-level Pydantic schemas matching API.md across common, runs, approvals, plans, drafts, briefs, insights, settings, onboarding, and evaluation contracts with comprehensive validation tests
 - DOC-01, DOC-07, DOC-02 completed: Cross-document consistency verified against all 33 ADRs; PRD, ARCHITECTURE, DATABASE, and API specifications are locked (v1.1)
 - MODEL-01 completed: Tested `qwen3.5:4b` using `think=False` on routing (100% accuracy), JSON schema adherence (100%), tool selection (100%), and no-tool precision (100%). Latency averaged 9.6s. ADR-015 limits reviewed and confirmed.
+- MCP-01 to MCP-05 completed: Evaluated servers against Section 11 checklist. Confirmed YouTube `forHandle` parameter for ADR-031 handle resolution; split YouTube tools to custom wrappers for quota/token capping and credential isolation; web search passed with result capping; raw web fetch rejected for SSRF risk and routed through custom URL guard (TOOL-07); Instagram MCP deferred for v1; confirmed official transcript download is unavailable for other creators' videos and prohibited for own videos under read-only rule ADR-009 (`youtube.force-ssl` rejected). All pass/fail results logged in DECISIONS.md.
 
 ## Current task
 
-MCP-01: Check YouTube MCP server with ARCHITECTURE.md checklist, confirm channel lookup by handle, revisit ADR-031
+DATA-01: Collect sample creator data (videos, comments, public stats) for testing
 
 ## Key decisions in force
 
@@ -46,22 +47,21 @@ MCP-01: Check YouTube MCP server with ARCHITECTURE.md checklist, confirm channel
 - Interrupted runs are recovered by the creator, not automatically (ADR-026)
 - Local API protections and the OAuth contract are specified (ADR-027)
 - Plan items have a stable `item_key` across plan versions (ADR-029)
-- Accepted by the project owner on 2026-10-24 (DOC-08): separate checkpoint database (ADR-007), mark as posted (ADR-010), in-process background worker (ADR-013), depth levels and limits (ADR-015, confirmed after MODEL-01), frontend stack (ADR-019), declared-only creator profile (ADR-030), onboarding data model and endpoints (ADR-031, with handle resolution revisited after MCP-01), channel change keeps content (ADR-032), comment retention clears text and links examples (ADR-033)
+- Accepted by the project owner on 2026-10-24 (DOC-08): separate checkpoint database (ADR-007), mark as posted (ADR-010), in-process background worker (ADR-013), depth levels and limits (ADR-015, confirmed after MODEL-01), frontend stack (ADR-019), declared-only creator profile (ADR-030), onboarding data model and endpoints (ADR-031, with handle resolution confirmed by MCP-01), channel change keeps content (ADR-032), comment retention clears text and links examples (ADR-033)
 - Project owner accepted the plan-item identity, OAuth callback and deletion-sequence fixes
 - Evaluation: fixed pipeline compared with the Supervisor graph
 
 ## Known issues and open points
 
-- MCP servers have not been checked (MCP-01 to MCP-04). Transcripts of other creators' videos are a known risk.
+- Transcript limitations confirmed: Other creators' transcripts are unavailable via official YouTube API; own-video transcripts require write scope `youtube.force-ssl`, which is prohibited by ADR-009. Video metadata, descriptions, and comments are used instead.
+- Channel-handle resolution confirmed viable via YouTube Data API `forHandle` parameter (ADR-031).
 - Clustering method and thresholds are not chosen.
 - Number of evaluation test cases is not chosen.
-- Channel-handle resolution must be revisited after MCP-01.
 - Specification documents are locked (v1.1).
 - Onboarding (FR-0, DESIGN 4.0) is written into the documents, with matching DATABASE, API, SECURITY, TEST_PLAN and TASKS changes, and its decisions are accepted. DOC-06 is done.
-- Channel change keeps stored content (ADR-032). Channel lookup by handle must be confirmed at MCP-01.
+- Channel change keeps stored content (ADR-032).
 - Observed-style analysis of the creator's content is deferred (STYLE-01, ADR-030).
-- Third review pass fixed: plan-item identity (`item_key`), OAuth callback rules, full deletion sequence, MCP provenance and permission tests, API-key status shape, embedding model default.
-- Platform capabilities are decided in the documents but are confirmed only after the MCP checks.
+- Platform capabilities: full public research and owner analytics for YouTube, Instagram as text drafting target only in v1.
 
 ## Next steps
 

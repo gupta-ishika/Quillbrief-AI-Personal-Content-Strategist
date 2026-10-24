@@ -22,11 +22,11 @@ Each task ID is used in commit messages. Mark a task complete only when its test
 - [x] DOC-07 Final consistency check of all documents against ADR-021 to ADR-033 before DOC-02, including the onboarding, channel and comment-retention changes to PRD, DESIGN, DATABASE, API, SECURITY and TEST_PLAN
 - [x] DOC-08 Owner decision on every Proposed ADR that other documents already assumed: ADR-007, ADR-010, ADR-013, ADR-015, ADR-019, ADR-030, ADR-031, ADR-032 and ADR-033. All accepted on 2026-10-24, recorded in DECISIONS.md. Conditions: review ADR-015 limits after MODEL-01, revisit channel-handle resolution after MCP-01
 - [x] MODEL-01 Test `qwen3.5:4b` on tool selection, no-tool precision, routing decisions and structured output; record results in DECISIONS.md. Then review the ADR-015 depth levels and token limits against the results
-- [ ] MCP-01 Check the YouTube MCP server with the ARCHITECTURE.md checklist and apply the decision rule. Confirm channel lookup by handle and revisit channel-handle resolution (ADR-031)
-- [ ] MCP-02 Check the web search and web fetch MCP servers
-- [ ] MCP-03 Check the Instagram MCP server (optional, read-only)
-- [ ] MCP-04 Check how transcripts can be obtained for (a) other creators' videos and (b) the connected creator's own videos, including the OAuth scopes caption download needs and whether they fit the read-only rule (ADR-009)
-- [ ] MCP-05 Record a pass or fail for every checklist item (including failure behavior, provenance, permission boundaries and credential isolation) for each server in the DECISIONS.md results log
+- [x] MCP-01 Check the YouTube MCP server with the ARCHITECTURE.md checklist and apply the decision rule. Confirm channel lookup by handle and revisit channel-handle resolution (ADR-031)
+- [x] MCP-02 Check the web search and web fetch MCP servers
+- [x] MCP-03 Check the Instagram MCP server (optional, read-only)
+- [x] MCP-04 Check how transcripts can be obtained for (a) other creators' videos and (b) the connected creator's own videos, including the OAuth scopes caption download needs and whether they fit the read-only rule (ADR-009)
+- [x] MCP-05 Record a pass or fail for every checklist item (including failure behavior, provenance, permission boundaries and credential isolation) for each server in the DECISIONS.md results log
 - [ ] DATA-01 Collect sample creator data (videos, comments, public stats) for testing
 
 ---
