@@ -26,10 +26,11 @@ Planning is complete in draft form. No code has been written yet.
 - SET-05 completed: Implemented health service checking SQLite DB connection, Ollama reachability, model verification, degradation handling, and API key protection; verified via pytest, ruff, and mypy
 - API-00 completed: Created full field-level Pydantic schemas matching API.md across common, runs, approvals, plans, drafts, briefs, insights, settings, onboarding, and evaluation contracts with comprehensive validation tests
 - DOC-01, DOC-07, DOC-02 completed: Cross-document consistency verified against all 33 ADRs; PRD, ARCHITECTURE, DATABASE, and API specifications are locked (v1.1)
+- MODEL-01 completed: Tested `qwen3.5:4b` using `think=False` on routing (100% accuracy), JSON schema adherence (100%), tool selection (100%), and no-tool precision (100%). Latency averaged 9.6s. ADR-015 limits reviewed and confirmed.
 
 ## Current task
 
-MODEL-01: Test `qwen3.5:4b` on tool selection, no-tool precision, routing decisions and structured output
+MCP-01: Check YouTube MCP server with ARCHITECTURE.md checklist, confirm channel lookup by handle, revisit ADR-031
 
 ## Key decisions in force
 
@@ -45,18 +46,17 @@ MODEL-01: Test `qwen3.5:4b` on tool selection, no-tool precision, routing decisi
 - Interrupted runs are recovered by the creator, not automatically (ADR-026)
 - Local API protections and the OAuth contract are specified (ADR-027)
 - Plan items have a stable `item_key` across plan versions (ADR-029)
-- Accepted by the project owner on 2026-10-24 (DOC-08): separate checkpoint database (ADR-007), mark as posted (ADR-010), in-process background worker (ADR-013), depth levels and limits (ADR-015, as starting values to review after MODEL-01), frontend stack (ADR-019), declared-only creator profile (ADR-030), onboarding data model and endpoints (ADR-031, with handle resolution revisited after MCP-01), channel change keeps content (ADR-032), comment retention clears text and links examples (ADR-033)
+- Accepted by the project owner on 2026-10-24 (DOC-08): separate checkpoint database (ADR-007), mark as posted (ADR-010), in-process background worker (ADR-013), depth levels and limits (ADR-015, confirmed after MODEL-01), frontend stack (ADR-019), declared-only creator profile (ADR-030), onboarding data model and endpoints (ADR-031, with handle resolution revisited after MCP-01), channel change keeps content (ADR-032), comment retention clears text and links examples (ADR-033)
 - Project owner accepted the plan-item identity, OAuth callback and deletion-sequence fixes
 - Evaluation: fixed pipeline compared with the Supervisor graph
 
 ## Known issues and open points
 
-- The model test (MODEL-01) has not been run. Routing and tool selection reliability with a 4B model is the biggest technical risk.
 - MCP servers have not been checked (MCP-01 to MCP-04). Transcripts of other creators' videos are a known risk.
 - Clustering method and thresholds are not chosen.
 - Number of evaluation test cases is not chosen.
-- ADR-015 limits must be reviewed after MODEL-01, and channel-handle resolution revisited after MCP-01.
-- Documents are drafts under review and not yet locked. Version 1.1 applies the decisions above. A fresh consistency read is still needed (DOC-07).
+- Channel-handle resolution must be revisited after MCP-01.
+- Specification documents are locked (v1.1).
 - Onboarding (FR-0, DESIGN 4.0) is written into the documents, with matching DATABASE, API, SECURITY, TEST_PLAN and TASKS changes, and its decisions are accepted. DOC-06 is done.
 - Channel change keeps stored content (ADR-032). Channel lookup by handle must be confirmed at MCP-01.
 - Observed-style analysis of the creator's content is deferred (STYLE-01, ADR-030).
