@@ -20,10 +20,11 @@ Planning is complete in draft form. No code has been written yet.
 - API-key decision applied (ADR-021)
 - Versioning, scheduling, deletion, platform scope, recovery and local-API rules decided and written into the documents (ADR-022 to ADR-028)
 - SET-01 completed: Git repo initialized, `.gitignore`, `.env.example`, `docs/RULES.md` created, spec docs moved to `docs/` folder
+- SET-02 completed: Backend scaffolded (FastAPI, Ruff, mypy, pytest), virtualenv configured, dependencies installed, health endpoints and security middleware tested cleanly
 
 ## Current task
 
-SET-02: Set up the backend project (Python, FastAPI, Ruff, mypy, pytest)
+SET-03: Set up the frontend project (React, TypeScript, lint, tests)
 
 ## Key decisions in force
 
@@ -68,6 +69,7 @@ SET-02: Set up the backend project (Python, FastAPI, Ruff, mypy, pytest)
 
 ## Update log
 
+- SET-02 done (2026-10-24): Created backend project structure (`backend/app`, `backend/tests`), `pyproject.toml`, FastAPI app with security middleware and health endpoint, installed dependencies in `.venv`, verified with ruff, mypy, and pytest.
 - SET-01 done (2026-10-24): Initialized Git repository, created `.gitignore`, `.env.example`, `docs/RULES.md`, and organized documentation markdown files under `docs/`.
 - Documents drafted. No implementation yet.
 - DOC-08 done (2026-10-24): ADR-007, 010, 013, 015, 019, 030, 031, 032 and 033 accepted. ADR-015 on the condition of a post-MODEL-01 review, ADR-031 on the condition that handle resolution is revisited after MCP-01. DOC-06 and DOC-08 checked off in TASKS.md. DOC-07 and DOC-02 remain open. MODEL-01, MCP-01 to MCP-05 and SET-04 are not run.
