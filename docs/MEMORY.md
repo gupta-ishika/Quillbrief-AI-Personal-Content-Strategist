@@ -31,10 +31,11 @@ Planning is complete in draft form. No code has been written yet.
 - DATA-01 completed: Created realistic fixture datasets (`creator.json`, `videos.json`, `comments.json`, `performance_metrics.json`, `evaluation_cases.json`) in `backend/tests/fixtures/` and verified with unit tests `backend/tests/test_fixtures.py` ensuring anonymity (UT-14) and coverage of all 5 ARCHITECTURE.md 6.4 evaluation routes.
 - DB-01 completed: Created SQLAlchemy 2.0 models and Alembic migrations for all Phase 1 tables: `creators`, `settings`, `goals`, `runs` (including `INTERRUPTED` status and `degraded` indicators), `tasks`, `routing_logs`, `token_usage`, `run_events`, `content_items`, `comments` (with nullable `text` for 90-day retention), `comment_insights`, `comment_insight_sources`, `comment_insight_examples`, `research_findings`, `content_plans`, `plan_items`, `drafts`, `approvals`, and `cache_entries`. Verified with migration application and 22 unit tests.
 - DB-02 completed: Configured SQLite pragmas (`foreign_keys = ON`, `journal_mode = WAL`, `busy_timeout = 5000`) on SQLite engine connections and authored repository modules in `backend/app/db/repositories/` covering `creator`, `settings`, `runs`, `content`, and `plans`. Verified with 26 unit tests covering channel isolation (ADR-032), versioning, and approvals.
+- GRAPH-01 completed: Defined `ContentState` TypedDict and Pydantic decision models (`SupervisorDecision`, `CriticEvaluationDecision`, `DepthIncreaseDecision`, `TaskUpdate`) with strict constraints and extra field forbidding. Verified with 32 unit tests.
 
 ## Current task
 
-GRAPH-01: Define the graph state and the Pydantic decision models
+GRAPH-02: Build the Supervisor: eligible-node calculation in code, model choice, validation, default fallback
 
 ## Key decisions in force
 
