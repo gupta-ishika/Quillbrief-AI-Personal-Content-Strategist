@@ -38,7 +38,7 @@ Goal: a working agentic loop where the route depends on state, including a rejec
 - [x] DB-01 Create SQLAlchemy models and Alembic migrations for the tables needed in Phase 1, including plan lineage and versions, approvals with exact item IDs, and the `INTERRUPTED` run status. Also create `creators` and `settings` (onboarding fields) here, because onboarding is the first screen, and the comment tables with nullable `text`, `comment_insight_sources` and `comment_insight_examples`
 - [x] DB-02 Set SQLite options (foreign keys, WAL) and add repository functions
 - [x] GRAPH-01 Define the graph state and the Pydantic decision models
-- [ ] GRAPH-02 Build the Supervisor: eligible-node calculation in code, model choice, validation, default fallback
+- [x] GRAPH-02 Build the Supervisor: eligible-node calculation in code, model choice, validation, default fallback
 - [ ] GRAPH-03 Add the step budget, repeat detection and the routing log
 - [ ] GRAPH-04 Add the SQLite checkpointer in its own database file
 - [ ] SCHED-00 Scheduler service (APScheduler with the SQLAlchemy job store): create, remove and replace the Weekly Brief job from saved settings. It creates no job until onboarding is completed. Its target is a placeholder that does nothing until the brief exists (AGT-07). Called by `POST /onboarding/complete` and by schedule changes

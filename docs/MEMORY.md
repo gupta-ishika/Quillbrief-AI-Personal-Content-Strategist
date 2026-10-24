@@ -32,10 +32,11 @@ Planning is complete in draft form. No code has been written yet.
 - DB-01 completed: Created SQLAlchemy 2.0 models and Alembic migrations for all Phase 1 tables: `creators`, `settings`, `goals`, `runs` (including `INTERRUPTED` status and `degraded` indicators), `tasks`, `routing_logs`, `token_usage`, `run_events`, `content_items`, `comments` (with nullable `text` for 90-day retention), `comment_insights`, `comment_insight_sources`, `comment_insight_examples`, `research_findings`, `content_plans`, `plan_items`, `drafts`, `approvals`, and `cache_entries`. Verified with migration application and 22 unit tests.
 - DB-02 completed: Configured SQLite pragmas (`foreign_keys = ON`, `journal_mode = WAL`, `busy_timeout = 5000`) on SQLite engine connections and authored repository modules in `backend/app/db/repositories/` covering `creator`, `settings`, `runs`, `content`, and `plans`. Verified with 26 unit tests covering channel isolation (ADR-032), versioning, and approvals.
 - GRAPH-01 completed: Defined `ContentState` TypedDict and Pydantic decision models (`SupervisorDecision`, `CriticEvaluationDecision`, `DepthIncreaseDecision`, `TaskUpdate`) with strict constraints and extra field forbidding. Verified with 32 unit tests.
+- GRAPH-02 completed: Built Supervisor node with deterministic code-calculated node eligibility (`calculate_eligible_nodes`), single-node direct routing without LLM calls (UT-03), structured model choice (`think=False`), bounded single-retry validation, deterministic code fallback (`get_deterministic_default_node`), run degradation marking, and routing log persistence. Verified with 37 unit tests.
 
 ## Current task
 
-GRAPH-02: Build the Supervisor: eligible-node calculation in code, model choice, validation, default fallback
+GRAPH-03: Add the step budget, repeat detection and the routing log
 
 ## Key decisions in force
 
