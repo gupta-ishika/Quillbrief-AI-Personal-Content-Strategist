@@ -1,0 +1,38 @@
+[
+  {
+    "video_id": "vid_py01_fastapi",
+    "views": 14250,
+    "watch_time_hours": 1280.5,
+    "avg_view_duration_seconds": 323,
+    "retention_at_30s": 0.68,
+    "click_through_rate": 0.072,
+    "likes": 920,
+    "comments": 84,
+    "shares": 115,
+    "subscribers_gained": 340
+  },
+  {
+    "video_id": "vid_py02_langgraph",
+    "views": 21800,
+    "watch_time_hours": 2450.0,
+    "avg_view_duration_seconds": 405,
+    "retention_at_30s": 0.74,
+    "click_through_rate": 0.089,
+    "likes": 1640,
+    "comments": 142,
+    "shares": 290,
+    "subscribers_gained": 680
+  },
+  {
+    "video_id": "vid_py03_pydantic",
+    "views": 8900,
+    "watch_time_hours": 610.2,
+    "avg_view_duration_seconds": 248,
+    "retention_at_30s": 0.59,
+    "click_through_rate": 0.054,
+    "likes": 510,
+    "comments": 39,
+    "shares": 45,
+    "subscribers_gained": 120
+  }
+]

@@ -1,0 +1,65 @@
+[
+  {
+    "case_id": "eval_01_new_creator",
+    "description": "New creator with two videos: thin audience data requires Listener then Research then Strategist",
+    "starting_state": {
+      "channel_connected": true,
+      "video_count": 2,
+      "comment_insights_fresh": false,
+      "niche_research_fresh": false,
+      "pending_plan": false
+    },
+    "expected_route": ["listener", "research", "strategist", "approval"],
+    "goal": "Plan 3 high-impact tutorial videos for junior Python developers"
+  },
+  {
+    "case_id": "eval_02_established_creator",
+    "description": "Established creator with fresh insights: skips Listener and Research, routes to Strategist directly",
+    "starting_state": {
+      "channel_connected": true,
+      "video_count": 45,
+      "comment_insights_fresh": true,
+      "niche_research_fresh": true,
+      "pending_plan": false
+    },
+    "expected_route": ["strategist", "approval"],
+    "goal": "Generate next week's content plan based on current audience questions"
+  },
+  {
+    "case_id": "eval_03_rejected_plan",
+    "description": "Plan rejected by creator: routes back to Strategist with feedback without re-fetching comments",
+    "starting_state": {
+      "channel_connected": true,
+      "pending_plan": true,
+      "plan_status": "REJECTED",
+      "rejection_feedback": "Too theoretical. Needs practical FastAPI code walkthroughs.",
+      "comment_insights_fresh": true
+    },
+    "expected_route": ["strategist", "approval"],
+    "goal": "Revise the rejected content plan according to creator feedback"
+  },
+  {
+    "case_id": "eval_04_weak_hook_revision",
+    "description": "Weak hook in draft: routes to Writer and Critic loop up to 3 reviews",
+    "starting_state": {
+      "approved_plan_item_id": "item_001",
+      "draft_version": 1,
+      "critic_score": 5.5,
+      "critic_feedback": "Opening hook is sluggish; get straight to the code problem in the first 5 seconds."
+    },
+    "expected_route": ["writer", "critic"],
+    "goal": "Revise video script draft to improve hook retention"
+  },
+  {
+    "case_id": "eval_05_brief_no_new_posts",
+    "description": "Weekly brief with no new posts: brief generation skips Analyst and formats plan directly",
+    "starting_state": {
+      "trigger": "scheduled",
+      "new_posts_count": 0,
+      "new_comments_count": 12,
+      "comment_insights_fresh": false
+    },
+    "expected_route": ["listener", "strategist", "writer"],
+    "goal": "Assemble weekly brief without post-mortem analytics"
+  }
+]

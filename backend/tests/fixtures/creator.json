@@ -1,0 +1,11 @@
+{
+  "creator_id": "c1a2b3c4-0000-0000-0000-000000000001",
+  "channel_id": "UC_x5XG1OV2P6uZZ5FSM9Ttw",
+  "channel_handle": "@devstrategist",
+  "channel_title": "Developer Strategy & AI",
+  "niche": "Python Backend & AI Engineering",
+  "tone_preset": "educational",
+  "tone_instructions": "Clear, direct, and practical code-first explanations without hype. Emphasize maintainability and performance.",
+  "onboarding_completed": true,
+  "profile_source": "declared"
+}

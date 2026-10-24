@@ -27,7 +27,7 @@ Each task ID is used in commit messages. Mark a task complete only when its test
 - [x] MCP-03 Check the Instagram MCP server (optional, read-only)
 - [x] MCP-04 Check how transcripts can be obtained for (a) other creators' videos and (b) the connected creator's own videos, including the OAuth scopes caption download needs and whether they fit the read-only rule (ADR-009)
 - [x] MCP-05 Record a pass or fail for every checklist item (including failure behavior, provenance, permission boundaries and credential isolation) for each server in the DECISIONS.md results log
-- [ ] DATA-01 Collect sample creator data (videos, comments, public stats) for testing
+- [x] DATA-01 Collect sample creator data (videos, comments, public stats) for testing
 
 ---
 

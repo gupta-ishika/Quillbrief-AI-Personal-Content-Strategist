@@ -28,10 +28,11 @@ Planning is complete in draft form. No code has been written yet.
 - DOC-01, DOC-07, DOC-02 completed: Cross-document consistency verified against all 33 ADRs; PRD, ARCHITECTURE, DATABASE, and API specifications are locked (v1.1)
 - MODEL-01 completed: Tested `qwen3.5:4b` using `think=False` on routing (100% accuracy), JSON schema adherence (100%), tool selection (100%), and no-tool precision (100%). Latency averaged 9.6s. ADR-015 limits reviewed and confirmed.
 - MCP-01 to MCP-05 completed: Evaluated servers against Section 11 checklist. Confirmed YouTube `forHandle` parameter for ADR-031 handle resolution; split YouTube tools to custom wrappers for quota/token capping and credential isolation; web search passed with result capping; raw web fetch rejected for SSRF risk and routed through custom URL guard (TOOL-07); Instagram MCP deferred for v1; confirmed official transcript download is unavailable for other creators' videos and prohibited for own videos under read-only rule ADR-009 (`youtube.force-ssl` rejected). All pass/fail results logged in DECISIONS.md.
+- DATA-01 completed: Created realistic fixture datasets (`creator.json`, `videos.json`, `comments.json`, `performance_metrics.json`, `evaluation_cases.json`) in `backend/tests/fixtures/` and verified with unit tests `backend/tests/test_fixtures.py` ensuring anonymity (UT-14) and coverage of all 5 ARCHITECTURE.md 6.4 evaluation routes.
 
 ## Current task
 
-DATA-01: Collect sample creator data (videos, comments, public stats) for testing
+DB-01: Create SQLAlchemy models and Alembic migrations for Phase 1 tables (creators, settings, runs, tasks, plans, plan_items, plan_versions, approvals, drafts, draft_versions, comments, comment_insight_sources, comment_insight_examples)
 
 ## Key decisions in force
 

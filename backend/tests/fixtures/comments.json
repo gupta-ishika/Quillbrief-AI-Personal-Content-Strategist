@@ -1,0 +1,114 @@
+[
+  {
+    "comment_id": "cmt_001",
+    "video_id": "vid_py01_fastapi",
+    "text": "How do you handle background tasks and worker queues cleanly in FastAPI without adding Celery or Redis for small projects?",
+    "likes": 42,
+    "reply_count": 6,
+    "published_at": "2026-09-16T11:20:00Z"
+  },
+  {
+    "comment_id": "cmt_002",
+    "video_id": "vid_py01_fastapi",
+    "text": "Great breakdown of SQLite WAL mode! Does connection pooling with SQLAlchemy handle concurrent writes without database locked errors?",
+    "likes": 28,
+    "reply_count": 3,
+    "published_at": "2026-09-17T09:15:00Z"
+  },
+  {
+    "comment_id": "cmt_003",
+    "video_id": "vid_py01_fastapi",
+    "text": "Could you do a dedicated video on authentication and JWT refresh token rotation with FastAPI?",
+    "likes": 65,
+    "reply_count": 8,
+    "published_at": "2026-09-18T14:40:00Z"
+  },
+  {
+    "comment_id": "cmt_004",
+    "video_id": "vid_py01_fastapi",
+    "text": "🔥🔥🔥",
+    "likes": 2,
+    "reply_count": 0,
+    "published_at": "2026-09-19T02:10:00Z"
+  },
+  {
+    "comment_id": "cmt_005",
+    "video_id": "vid_py01_fastapi",
+    "text": "Earn $500 daily trading crypto! Click here: bit.ly/spam-crypto-scam",
+    "likes": 0,
+    "reply_count": 0,
+    "published_at": "2026-09-20T05:00:00Z"
+  },
+  {
+    "comment_id": "cmt_006",
+    "video_id": "vid_py02_langgraph",
+    "text": "This LangGraph tutorial is gold! How do you persist state across backend restarts when an approval is pending?",
+    "likes": 88,
+    "reply_count": 12,
+    "published_at": "2026-10-02T16:00:00Z"
+  },
+  {
+    "comment_id": "cmt_007",
+    "video_id": "vid_py02_langgraph",
+    "text": "Can you explain how to configure Ollama qwen3.5:4b so it stops generating massive thinking tokens and outputs clean JSON directly?",
+    "likes": 54,
+    "reply_count": 5,
+    "published_at": "2026-10-03T10:30:00Z"
+  },
+  {
+    "comment_id": "cmt_008",
+    "video_id": "vid_py02_langgraph",
+    "text": "I tried running multi-agent loops locally and kept hitting infinite recursion. How do you implement step budgets and cycle detection?",
+    "likes": 39,
+    "reply_count": 4,
+    "published_at": "2026-10-04T08:20:00Z"
+  },
+  {
+    "comment_id": "cmt_009",
+    "video_id": "vid_py02_langgraph",
+    "text": "Please provide the GitHub repo link for this LangGraph architecture!",
+    "likes": 19,
+    "reply_count": 1,
+    "published_at": "2026-10-05T19:00:00Z"
+  },
+  {
+    "comment_id": "cmt_010",
+    "video_id": "vid_py02_langgraph",
+    "text": "👍👏",
+    "likes": 1,
+    "reply_count": 0,
+    "published_at": "2026-10-06T11:00:00Z"
+  },
+  {
+    "comment_id": "cmt_011",
+    "video_id": "vid_py03_pydantic",
+    "text": "Discriminated unions in Pydantic v2 completely simplified our API schemas. Can you show how to use them with FastAPI request bodies?",
+    "likes": 31,
+    "reply_count": 2,
+    "published_at": "2026-10-15T09:45:00Z"
+  },
+  {
+    "comment_id": "cmt_012",
+    "video_id": "vid_py03_pydantic",
+    "text": "How do you validate character lengths and strip control characters cleanly with Pydantic field validators?",
+    "likes": 22,
+    "reply_count": 1,
+    "published_at": "2026-10-16T14:10:00Z"
+  },
+  {
+    "comment_id": "cmt_013",
+    "video_id": "vid_niche_comp01",
+    "text": "TaskGroups are much better than asyncio.gather. The exception handling semantics make cancellation so much easier.",
+    "likes": 76,
+    "reply_count": 9,
+    "published_at": "2026-10-06T14:00:00Z"
+  },
+  {
+    "comment_id": "cmt_014",
+    "video_id": "vid_niche_comp02",
+    "text": "Qwen 3.5 4B punches way above its weight for structured JSON output and function calling. Perfect for local pipelines.",
+    "likes": 110,
+    "reply_count": 15,
+    "published_at": "2026-10-19T18:25:00Z"
+  }
+]

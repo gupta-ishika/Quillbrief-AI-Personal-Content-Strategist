@@ -1,0 +1,67 @@
+[
+  {
+    "video_id": "vid_py01_fastapi",
+    "channel_id": "UC_x5XG1OV2P6uZZ5FSM9Ttw",
+    "title": "FastAPI Production Architecture in 2026: Clean Architecture & SQLite WAL",
+    "description": "How to structure a production-ready FastAPI backend with SQLite WAL mode, connection pooling, and domain services.",
+    "published_at": "2026-09-15T10:00:00Z",
+    "duration_seconds": 845,
+    "tags": ["fastapi", "python", "sqlite", "backend", "architecture"],
+    "view_count": 14250,
+    "like_count": 920,
+    "comment_count": 84,
+    "is_own_video": true
+  },
+  {
+    "video_id": "vid_py02_langgraph",
+    "channel_id": "UC_x5XG1OV2P6uZZ5FSM9Ttw",
+    "title": "Local Multi-Agent Workflows with LangGraph & Ollama (No Cloud Needed)",
+    "description": "Building stateful human-in-the-loop multi-agent systems locally using Ollama qwen3.5:4b and LangGraph checkpointing.",
+    "published_at": "2026-10-01T14:30:00Z",
+    "duration_seconds": 1120,
+    "tags": ["langgraph", "ollama", "agents", "local-ai", "python"],
+    "view_count": 21800,
+    "like_count": 1640,
+    "comment_count": 142,
+    "is_own_video": true
+  },
+  {
+    "video_id": "vid_py03_pydantic",
+    "channel_id": "UC_x5XG1OV2P6uZZ5FSM9Ttw",
+    "title": "5 Pydantic v2 Best Practices You Aren't Using (Field Validation & Discriminators)",
+    "description": "Deep dive into model validators, discriminated unions, and serialization patterns in Pydantic v2.",
+    "published_at": "2026-10-14T08:00:00Z",
+    "duration_seconds": 630,
+    "tags": ["pydantic", "python", "typing", "validation"],
+    "view_count": 8900,
+    "like_count": 510,
+    "comment_count": 39,
+    "is_own_video": true
+  },
+  {
+    "video_id": "vid_niche_comp01",
+    "channel_id": "UC_comp_python_guru",
+    "title": "Asyncio in Python 3.13: TaskGroups and Real-World Concurrency Gotchas",
+    "description": "Comprehensive tutorial on TaskGroups, exception handling, and cancellation in modern Python asyncio.",
+    "published_at": "2026-10-05T12:00:00Z",
+    "duration_seconds": 960,
+    "tags": ["asyncio", "python313", "concurrency"],
+    "view_count": 34000,
+    "like_count": 2100,
+    "comment_count": 210,
+    "is_own_video": false
+  },
+  {
+    "video_id": "vid_niche_comp02",
+    "channel_id": "UC_comp_ai_engineer",
+    "title": "Small Local LLMs in 2026: Testing 3B and 4B Models on Reasoning & Tool Calls",
+    "description": "Benchmarking Qwen 3.5, Llama 3.2, and Phi-4 on edge devices and laptops for local agentic automation.",
+    "published_at": "2026-10-18T16:00:00Z",
+    "duration_seconds": 1340,
+    "tags": ["llm", "local-ai", "benchmarks", "ollama"],
+    "view_count": 48500,
+    "like_count": 3200,
+    "comment_count": 315,
+    "is_own_video": false
+  }
+]
