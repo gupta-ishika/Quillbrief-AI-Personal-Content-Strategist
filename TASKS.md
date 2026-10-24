@@ -10,7 +10,7 @@ Each task ID is used in commit messages. Mark a task complete only when its test
 
 - [x] SET-01 Create the repository, `.gitignore`, `.env.example` and the `docs/` folder
 - [x] SET-02 Set up the backend project (Python, FastAPI, Ruff, mypy, pytest)
-- [ ] SET-03 Set up the frontend project (React, TypeScript, lint, tests)
+- [x] SET-03 Set up the frontend project (React, TypeScript, lint, tests)
 - [ ] SET-04 Install Ollama and pull `qwen3.5:4b` and the embedding model (default `nomic-embed-text`; confirm the exact name, set `EMBEDDING_MODEL`, and record it in DECISIONS.md)
 - [ ] SET-05 Add a health check that confirms the database, Ollama and both models
 - [ ] API-00 Write field-level Pydantic schemas that match API.md

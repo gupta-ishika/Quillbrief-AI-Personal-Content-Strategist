@@ -21,10 +21,11 @@ Planning is complete in draft form. No code has been written yet.
 - Versioning, scheduling, deletion, platform scope, recovery and local-API rules decided and written into the documents (ADR-022 to ADR-028)
 - SET-01 completed: Git repo initialized, `.gitignore`, `.env.example`, `docs/RULES.md` created, spec docs moved to `docs/` folder
 - SET-02 completed: Backend scaffolded (FastAPI, Ruff, mypy, pytest), virtualenv configured, dependencies installed, health endpoints and security middleware tested cleanly
+- SET-03 completed: Frontend scaffolded (Vite, React, TypeScript, Tailwind CSS, TanStack Query, React Router, Lucide, Vitest, Testing Library, ESLint), verified tests, build, and lint cleanly
 
 ## Current task
 
-SET-03: Set up the frontend project (React, TypeScript, lint, tests)
+SET-04: Install Ollama and pull qwen3.5:4b and the embedding model
 
 ## Key decisions in force
 
@@ -69,6 +70,7 @@ SET-03: Set up the frontend project (React, TypeScript, lint, tests)
 
 ## Update log
 
+- SET-03 done (2026-10-24): Created frontend project with Vite, React, TypeScript, Tailwind CSS, TanStack Query, React Router, Lucide icons, Vitest, Testing Library, ESLint flat config; verified test, build, and lint.
 - SET-02 done (2026-10-24): Created backend project structure (`backend/app`, `backend/tests`), `pyproject.toml`, FastAPI app with security middleware and health endpoint, installed dependencies in `.venv`, verified with ruff, mypy, and pytest.
 - SET-01 done (2026-10-24): Initialized Git repository, created `.gitignore`, `.env.example`, `docs/RULES.md`, and organized documentation markdown files under `docs/`.
 - Documents drafted. No implementation yet.
