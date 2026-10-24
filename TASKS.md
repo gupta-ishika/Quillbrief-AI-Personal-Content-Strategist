@@ -36,7 +36,7 @@ Each task ID is used in commit messages. Mark a task complete only when its test
 Goal: a working agentic loop where the route depends on state, including a rejected-plan path.
 
 - [x] DB-01 Create SQLAlchemy models and Alembic migrations for the tables needed in Phase 1, including plan lineage and versions, approvals with exact item IDs, and the `INTERRUPTED` run status. Also create `creators` and `settings` (onboarding fields) here, because onboarding is the first screen, and the comment tables with nullable `text`, `comment_insight_sources` and `comment_insight_examples`
-- [ ] DB-02 Set SQLite options (foreign keys, WAL) and add repository functions
+- [x] DB-02 Set SQLite options (foreign keys, WAL) and add repository functions
 - [ ] GRAPH-01 Define the graph state and the Pydantic decision models
 - [ ] GRAPH-02 Build the Supervisor: eligible-node calculation in code, model choice, validation, default fallback
 - [ ] GRAPH-03 Add the step budget, repeat detection and the routing log
