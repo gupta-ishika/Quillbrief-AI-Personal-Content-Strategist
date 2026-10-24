@@ -1,6 +1,6 @@
 # ARCHITECTURE: AI Personal Content Strategist
 
-Status: Draft v1.1, under review
+Status: Locked v1.1
 Scope of this document: HOW the system is built. Requirements are in PRD.md.
 Detailed schemas are deferred: database tables go in DATABASE.md and API contracts in API.md.
 

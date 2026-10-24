@@ -14,12 +14,12 @@ Each task ID is used in commit messages. Mark a task complete only when its test
 - [x] SET-04 Install Ollama and pull `qwen3.5:4b` and the embedding model (default `nomic-embed-text`; confirm the exact name, set `EMBEDDING_MODEL`, and record it in DECISIONS.md)
 - [x] SET-05 Add a health check that confirms the database, Ollama and both models
 - [x] API-00 Write field-level Pydantic schemas that match API.md
-- [ ] DOC-01 Review all documents for consistency
-- [ ] DOC-02 Spec-lock gate: freeze PRD, ARCHITECTURE, DATABASE and API before Phase 1
+- [x] DOC-01 Review all documents for consistency
+- [x] DOC-02 Spec-lock gate: freeze PRD, ARCHITECTURE, DATABASE and API before Phase 1
 - [x] DEC-01 Decide API-key storage: environment only in v1, UI-managed in v2 (ADR-021)
 - [x] DOC-05 Decide versioning, scheduling, deletion, platform scope, recovery and local-API rules (ADR-022 to ADR-028) and update the documents
 - [x] DOC-06 Add the first-run onboarding flow (PRD FR-0 and DESIGN 4.0: niche, tone, optional channel by handle or OAuth pick-list, review) to PRD.md and DESIGN.md. Done. ADR-030, ADR-031 and ADR-032 accepted on 2026-10-24
-- [ ] DOC-07 Final consistency check of all documents against ADR-021 to ADR-033 before DOC-02, including the onboarding, channel and comment-retention changes to PRD, DESIGN, DATABASE, API, SECURITY and TEST_PLAN
+- [x] DOC-07 Final consistency check of all documents against ADR-021 to ADR-033 before DOC-02, including the onboarding, channel and comment-retention changes to PRD, DESIGN, DATABASE, API, SECURITY and TEST_PLAN
 - [x] DOC-08 Owner decision on every Proposed ADR that other documents already assumed: ADR-007, ADR-010, ADR-013, ADR-015, ADR-019, ADR-030, ADR-031, ADR-032 and ADR-033. All accepted on 2026-10-24, recorded in DECISIONS.md. Conditions: review ADR-015 limits after MODEL-01, revisit channel-handle resolution after MCP-01
 - [ ] MODEL-01 Test `qwen3.5:4b` on tool selection, no-tool precision, routing decisions and structured output; record results in DECISIONS.md. Then review the ADR-015 depth levels and token limits against the results
 - [ ] MCP-01 Check the YouTube MCP server with the ARCHITECTURE.md checklist and apply the decision rule. Confirm channel lookup by handle and revisit channel-handle resolution (ADR-031)

@@ -25,10 +25,11 @@ Planning is complete in draft form. No code has been written yet.
 - SET-04 completed: Confirmed Ollama installation, pulled `qwen3.5:4b` and verified `nomic-embed-text:latest`, confirmed exact names and recorded in DECISIONS.md
 - SET-05 completed: Implemented health service checking SQLite DB connection, Ollama reachability, model verification, degradation handling, and API key protection; verified via pytest, ruff, and mypy
 - API-00 completed: Created full field-level Pydantic schemas matching API.md across common, runs, approvals, plans, drafts, briefs, insights, settings, onboarding, and evaluation contracts with comprehensive validation tests
+- DOC-01, DOC-07, DOC-02 completed: Cross-document consistency verified against all 33 ADRs; PRD, ARCHITECTURE, DATABASE, and API specifications are locked (v1.1)
 
 ## Current task
 
-DOC-01: Review all documents for consistency
+MODEL-01: Test `qwen3.5:4b` on tool selection, no-tool precision, routing decisions and structured output
 
 ## Key decisions in force
 
@@ -73,6 +74,7 @@ DOC-01: Review all documents for consistency
 
 ## Update log
 
+- DOC-01, DOC-07, DOC-02 done (2026-10-24): Completed full consistency audit across PRD, ARCHITECTURE, DATABASE, API, DESIGN, SECURITY, RULES, and TEST_PLAN; verified all 33 ADRs; locked PRD, ARCHITECTURE, DATABASE, and API specifications (v1.1).
 - API-00 done (2026-10-24): Defined all Pydantic schemas in `backend/app/schemas/` matching API.md (common, runs, approvals, plans, drafts, briefs, insights, settings, onboarding, evaluation) and verified validation with tests, ruff, and mypy.
 - SET-05 done (2026-10-24): Built database and Ollama health service in `backend/app/services/health.py`, connected to `/health` and `/api/v1/health`, added unit and integration tests with mocks and live Ollama, verified with pytest, ruff, and mypy.
 - SET-04 done (2026-10-24): Verified Ollama installation, pulled `qwen3.5:4b`, confirmed `nomic-embed-text:latest` embedding model, recorded model confirmation in DECISIONS.md.

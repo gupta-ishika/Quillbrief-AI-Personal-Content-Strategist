@@ -1,6 +1,6 @@
 # API: AI Personal Content Strategist
 
-Status: Draft v1.1, under review
+Status: Locked v1.1
 Scope: REST API between the React UI and the FastAPI backend.
 Field-level schemas are written as Pydantic models during task API-00 and must match this document.
 

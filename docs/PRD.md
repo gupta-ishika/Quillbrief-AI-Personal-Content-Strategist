@@ -1,6 +1,6 @@
 # PRD: AI Personal Content Strategist
 
-Status: Draft v1.1, under review
+Status: Locked v1.1
 Scope of this document: WHAT we are building and WHY. The HOW is in ARCHITECTURE.md.
 
 ---

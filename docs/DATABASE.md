@@ -1,6 +1,6 @@
 # DATABASE: AI Personal Content Strategist
 
-Status: Draft v1.1, under review
+Status: Locked v1.1
 Scope: application data model. Graph checkpoints are separate (see section 8).
 
 ---
