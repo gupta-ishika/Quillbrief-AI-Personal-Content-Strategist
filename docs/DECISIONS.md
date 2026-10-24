@@ -180,6 +180,7 @@ Record spike and evaluation results here as they are produced.
 
 - Review decisions accepted by the project owner: plan item identity (ADR-029), OAuth callback rules (ADR-027), full deletion sequence (ADR-024).
 - DOC-08, 2026-10-24: the project owner accepted ADR-007, ADR-010, ADR-013, ADR-015, ADR-019, ADR-030, ADR-031, ADR-032 and ADR-033. ADR-015 is accepted on the condition that its limits are reviewed after MODEL-01. ADR-031 is accepted on the condition that channel-handle resolution is revisited after MCP-01. For ADR-033 the owner approved all three parts: text cleared after 90 days with the row kept, counts, dates and `processed_at` kept with no author information, and examples stored as references.
+- SET-04, 2026-10-24: Installed and confirmed Ollama v0.40.4 with language model `qwen3.5:4b` and embedding model `nomic-embed-text` (`nomic-embed-text:latest`). Confirmed exact model names; verified `EMBEDDING_MODEL=nomic-embed-text` and `MODEL_NAME=qwen3.5:4b`.
 - MODEL-01 (qwen3.5:4b routing, tool selection, no-tool precision, structured output): not yet run
 - MCP-01 to MCP-04 (server checks and decisions): not yet run
 - Clustering method and thresholds: not yet chosen
