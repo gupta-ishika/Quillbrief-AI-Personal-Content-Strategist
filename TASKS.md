@@ -12,7 +12,7 @@ Each task ID is used in commit messages. Mark a task complete only when its test
 - [x] SET-02 Set up the backend project (Python, FastAPI, Ruff, mypy, pytest)
 - [x] SET-03 Set up the frontend project (React, TypeScript, lint, tests)
 - [x] SET-04 Install Ollama and pull `qwen3.5:4b` and the embedding model (default `nomic-embed-text`; confirm the exact name, set `EMBEDDING_MODEL`, and record it in DECISIONS.md)
-- [ ] SET-05 Add a health check that confirms the database, Ollama and both models
+- [x] SET-05 Add a health check that confirms the database, Ollama and both models
 - [ ] API-00 Write field-level Pydantic schemas that match API.md
 - [ ] DOC-01 Review all documents for consistency
 - [ ] DOC-02 Spec-lock gate: freeze PRD, ARCHITECTURE, DATABASE and API before Phase 1

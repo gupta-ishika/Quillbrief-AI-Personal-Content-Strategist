@@ -23,10 +23,11 @@ Planning is complete in draft form. No code has been written yet.
 - SET-02 completed: Backend scaffolded (FastAPI, Ruff, mypy, pytest), virtualenv configured, dependencies installed, health endpoints and security middleware tested cleanly
 - SET-03 completed: Frontend scaffolded (Vite, React, TypeScript, Tailwind CSS, TanStack Query, React Router, Lucide, Vitest, Testing Library, ESLint), verified tests, build, and lint cleanly
 - SET-04 completed: Confirmed Ollama installation, pulled `qwen3.5:4b` and verified `nomic-embed-text:latest`, confirmed exact names and recorded in DECISIONS.md
+- SET-05 completed: Implemented health service checking SQLite DB connection, Ollama reachability, model verification, degradation handling, and API key protection; verified via pytest, ruff, and mypy
 
 ## Current task
 
-SET-05: Add a health check that confirms the database, Ollama and both models
+API-00: Write field-level Pydantic schemas that match API.md
 
 ## Key decisions in force
 
@@ -71,6 +72,7 @@ SET-05: Add a health check that confirms the database, Ollama and both models
 
 ## Update log
 
+- SET-05 done (2026-10-24): Built database and Ollama health service in `backend/app/services/health.py`, connected to `/health` and `/api/v1/health`, added unit and integration tests with mocks and live Ollama, verified with pytest, ruff, and mypy.
 - SET-04 done (2026-10-24): Verified Ollama installation, pulled `qwen3.5:4b`, confirmed `nomic-embed-text:latest` embedding model, recorded model confirmation in DECISIONS.md.
 - SET-03 done (2026-10-24): Created frontend project with Vite, React, TypeScript, Tailwind CSS, TanStack Query, React Router, Lucide icons, Vitest, Testing Library, ESLint flat config; verified test, build, and lint.
 - SET-02 done (2026-10-24): Created backend project structure (`backend/app`, `backend/tests`), `pyproject.toml`, FastAPI app with security middleware and health endpoint, installed dependencies in `.venv`, verified with ruff, mypy, and pytest.

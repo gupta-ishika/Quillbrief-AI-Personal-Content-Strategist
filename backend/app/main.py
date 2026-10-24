@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.config import settings
+from app.services.health import get_health_status
 
 app = FastAPI(
     title="AI Personal Content Strategist API",
@@ -87,17 +88,4 @@ async def security_headers_middleware(request: Request, call_next: Any) -> Respo
 @app.get("/health")
 @app.get("/api/v1/health")
 async def health_check() -> dict[str, Any]:
-    return {
-        "status": "healthy",
-        "database_reachable": True,
-        "ollama_reachable": False,  # Updated dynamically when connected
-        "models": {
-            "llm": settings.model_name,
-            "embedding": settings.embedding_model,
-            "installed": False,
-        },
-        "api_key_configured": settings.api_key_configured,
-        "scheduler_running": False,
-        "next_brief_at": None,
-        "interrupted_runs_count": 0,
-    }
+    return await get_health_status()
