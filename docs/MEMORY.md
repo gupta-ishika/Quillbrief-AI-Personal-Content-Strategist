@@ -80,6 +80,15 @@ GRAPH-04: Add the SQLite checkpointer in its own database file
 
 ## Update log
 
+- GRAPH-04 done (2026-10-24): Implemented dedicated SQLite checkpointer (sync and async with WAL & busy timeout) and thread checkpoint deletion service for creator data isolation (ADR-007, ADR-024).
+- GRAPH-03 done (2026-10-24): Enforced depth level step budgets (Quick 6, Standard 12, Deep 20) and cycle repeat detection in Supervisor node with degraded run annotations.
+- GRAPH-02 done (2026-10-24): Implemented Supervisor routing with code-calculated node eligibility, structured JSON decision output, and deterministic fallback.
+- GRAPH-01 done (2026-10-24): Defined LangGraph agent state and Pydantic decision models with strict schema validation.
+- DB-02 done (2026-10-24): Configured SQLite options (PRAGMA foreign_keys, WAL mode, busy_timeout 5000ms) and repository functions for creators, settings, runs, approvals, plans, drafts, comments, and metrics.
+- DB-01 done (2026-10-24): Created SQLAlchemy models and initial Alembic migrations for core tables matching DATABASE.md v1.1.
+- DATA-01 done (2026-10-24): Collected test fixture datasets for creator profile, videos, anonymous comments, metrics, and evaluation routes.
+- MCP-01 to MCP-05 done (2026-10-24): Audited MCP servers, confirmed channel lookup and read-only invariants in DECISIONS.md.
+- MODEL-01 done (2026-10-24): Benchmarked qwen3.5:4b on routing, schema adherence, and tool calling with think: False.
 - DOC-01, DOC-07, DOC-02 done (2026-10-24): Completed full consistency audit across PRD, ARCHITECTURE, DATABASE, API, DESIGN, SECURITY, RULES, and TEST_PLAN; verified all 33 ADRs; locked PRD, ARCHITECTURE, DATABASE, and API specifications (v1.1).
 - API-00 done (2026-10-24): Defined all Pydantic schemas in `backend/app/schemas/` matching API.md (common, runs, approvals, plans, drafts, briefs, insights, settings, onboarding, evaluation) and verified validation with tests, ruff, and mypy.
 - SET-05 done (2026-10-24): Built database and Ollama health service in `backend/app/services/health.py`, connected to `/health` and `/api/v1/health`, added unit and integration tests with mocks and live Ollama, verified with pytest, ruff, and mypy.
