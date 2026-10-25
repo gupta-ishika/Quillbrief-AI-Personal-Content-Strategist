@@ -45,7 +45,7 @@ Goal: a working agentic loop where the route depends on state, including a rejec
 - [x] TOOL-01 Build the comment fetcher (cap, filters, coverage count)
 - [x] TOOL-02 Build the comment clusterer with local embeddings
 - [x] TOOL-03 Build the state and database tools
-- [ ] TOOL-04 Load approved MCP servers through the MCP adapter, with per-agent allowlists
+- [x] TOOL-04 Load approved MCP servers through the MCP adapter, with per-agent allowlists
 - [ ] TOOL-07 Build the URL guard for fetch tools (http and https only, block private, loopback, link-local and metadata addresses before and after redirects, time and size caps)
 - [ ] AGT-01 Build the Listener agent (ReAct)
 - [ ] AGT-02 Build the Research agent (ReAct)

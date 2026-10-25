@@ -27,14 +27,28 @@ from app.tools.database_tools import (
     save_draft_version,
     save_plan_version,
 )
+from app.tools.mcp_adapter import (
+    AGENT_TOOL_ALLOWLISTS,
+    MCPAdapter,
+    ToolExecutionError,
+    UnauthorizedToolCallError,
+    annotate_provenance,
+    mcp_adapter,
+    verify_result_provenance,
+)
 
 __all__ = [
+    "AGENT_TOOL_ALLOWLISTS",
     "CleanComment",
     "ClusterExample",
     "ClusteringResult",
     "CommentFetchResult",
     "CommentFilterStats",
     "CommentTheme",
+    "MCPAdapter",
+    "ToolExecutionError",
+    "UnauthorizedToolCallError",
+    "annotate_provenance",
     "cluster_comments",
     "db_load_channel_insights_tool",
     "db_load_latest_plan_tool",
@@ -47,9 +61,11 @@ __all__ = [
     "load_channel_insights",
     "load_latest_draft",
     "load_latest_plan",
+    "mcp_adapter",
     "save_comment_insights",
     "save_comments_batch",
     "save_content_item",
     "save_draft_version",
     "save_plan_version",
+    "verify_result_provenance",
 ]
