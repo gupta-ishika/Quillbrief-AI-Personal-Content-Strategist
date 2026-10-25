@@ -45,6 +45,12 @@ from app.tools.mcp_adapter import (
     mcp_adapter,
     verify_result_provenance,
 )
+from app.tools.research_tools import (
+    register_research_tools,
+    web_fetch_tool,
+    web_search_tool,
+    youtube_video_search_tool,
+)
 from app.tools.url_guard import (
     DisallowedDestinationError,
     InvalidSchemeError,
@@ -53,6 +59,7 @@ from app.tools.url_guard import (
     URLGuardError,
     is_ip_allowed,
     safe_fetch_url,
+    safe_fetch_url_sync,
     safe_web_fetch_tool,
     validate_url,
 )
@@ -93,7 +100,9 @@ __all__ = [
     "load_latest_plan",
     "mcp_adapter",
     "register_listener_tools",
+    "register_research_tools",
     "safe_fetch_url",
+    "safe_fetch_url_sync",
     "safe_web_fetch_tool",
     "save_comment_insights",
     "save_comments_batch",
@@ -102,6 +111,9 @@ __all__ = [
     "save_plan_version",
     "validate_url",
     "verify_result_provenance",
+    "web_fetch_tool",
+    "web_search_tool",
     "youtube_channel_lookup_tool",
     "youtube_video_list_tool",
+    "youtube_video_search_tool",
 ]

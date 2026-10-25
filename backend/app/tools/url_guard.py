@@ -251,6 +251,78 @@ async def safe_fetch_url(
                 raise URLGuardError(f"Connection error fetching URL: {e}") from e
 
 
+def safe_fetch_url_sync(
+    url: str,
+    max_size_bytes: int = DEFAULT_MAX_SIZE_BYTES,
+    timeout_seconds: float = DEFAULT_TIMEOUT_SECONDS,
+    max_redirects: int = DEFAULT_MAX_REDIRECTS,
+) -> SafeFetchResult:
+    """Synchronously fetches a URL safely enforcing scheme, SSRF checks, redirects, size, and timeouts (UT-28)."""
+    current_url = url.strip()
+    redirect_history: list[str] = []
+
+    validate_url(current_url)
+
+    timeout = httpx.Timeout(timeout_seconds, connect=min(timeout_seconds, 5.0))
+
+    with httpx.Client(timeout=timeout, follow_redirects=False) as client:
+        redirect_count = 0
+
+        while True:
+            try:
+                with client.stream("GET", current_url) as resp:
+                    if resp.is_redirect:
+                        redirect_count += 1
+                        if redirect_count > max_redirects:
+                            raise DisallowedDestinationError(
+                                f"Exceeded maximum allowed redirects ({max_redirects})."
+                            )
+
+                        location = resp.headers.get("location")
+                        if not location:
+                            raise DisallowedDestinationError(
+                                "Redirect response missing Location header."
+                            )
+
+                        next_url = urllib.parse.urljoin(current_url, location)
+                        redirect_history.append(current_url)
+                        validate_url(next_url)
+                        current_url = next_url
+                        continue
+
+                    if resp.status_code >= 400:
+                        raise URLGuardError(f"HTTP {resp.status_code} error fetching destination.")
+
+                    chunks = []
+                    bytes_read = 0
+                    for chunk in resp.iter_bytes():
+                        bytes_read += len(chunk)
+                        if bytes_read > max_size_bytes:
+                            raise ResponseSizeLimitError(
+                                f"Response exceeded maximum size limit of {max_size_bytes} bytes."
+                            )
+                        chunks.append(chunk)
+
+                    raw_body = b"".join(chunks)
+                    content_text = raw_body.decode(resp.encoding or "utf-8", errors="replace")
+
+                    return SafeFetchResult(
+                        url=current_url,
+                        status_code=resp.status_code,
+                        content=content_text,
+                        content_type=resp.headers.get("content-type", "text/plain"),
+                        size_bytes=bytes_read,
+                        redirect_history=redirect_history,
+                        source="web_fetch",
+                        timestamp=utc_now().isoformat(),
+                        verified=True,
+                    )
+
+            except (httpx.ConnectError, httpx.TimeoutException) as e:
+                logger.warning("Network error fetching '%s': %s", current_url, e)
+                raise URLGuardError(f"Connection error fetching URL: {e}") from e
+
+
 @tool
 async def safe_web_fetch_tool(url: str) -> dict[str, Any]:
     """Safely reads the content of a public web page with strict SSRF protection and size limits.
