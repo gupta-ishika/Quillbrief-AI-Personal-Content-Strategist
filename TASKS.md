@@ -56,7 +56,7 @@ Goal: a working agentic loop where the route depends on state, including a rejec
 - [x] API-02 Implement approvals endpoints
 - [x] BG-01 Run graphs in a background worker with status updates and cooperative cancellation
 - [x] REC-01 Recover runs at startup: `RUNNING` becomes `INTERRUPTED`, record a recovery event, add resume, keep pending approvals, make tool writes idempotent
-- [ ] VER-01 Plan versioning: lineage, immutable versions, exact-version approvals, `EDITED` and stale-decision handling, cancelled approvals
+- [x] VER-01 Plan versioning: lineage, immutable versions, exact-version approvals, `EDITED` and stale-decision handling, cancelled approvals
 - [ ] SEC-03 Add CORS for one origin, Origin and Host checks, and the JSON-only rule for state-changing requests
 - [ ] UI-01 Build the app shell, sidebar and API client
 - [ ] UI-02 Build the Home screen with the goal box and depth selector
