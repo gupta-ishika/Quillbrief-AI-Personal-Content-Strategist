@@ -49,7 +49,7 @@ Goal: a working agentic loop where the route depends on state, including a rejec
 - [x] TOOL-07 Build the URL guard for fetch tools (http and https only, block private, loopback, link-local and metadata addresses before and after redirects, time and size caps)
 - [x] AGT-01 Build the Listener agent (ReAct)
 - [x] AGT-02 Build the Research agent (ReAct)
-- [ ] AGT-03 Build the Strategist agent with plan items and source labels
+- [x] AGT-03 Build the Strategist agent with plan items and source labels
 - [ ] HITL-01 Build the approval node with LangGraph interrupt and the approval tool
 - [ ] HITL-02 Resume a paused run after a backend restart
 - [ ] API-01 Implement runs endpoints
