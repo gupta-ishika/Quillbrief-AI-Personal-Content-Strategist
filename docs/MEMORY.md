@@ -80,6 +80,7 @@ GRAPH-04: Add the SQLite checkpointer in its own database file
 
 ## Update log
 
+- SCHED-00 done (2026-10-25): Built APScheduler scheduler service with SQLAlchemy job store, Weekly Brief job management (gated by onboarding_completed, replaceable on settings update), placeholder target for AGT-07, and lifespan lifecycle in FastAPI.
 - GRAPH-04 done (2026-10-24): Implemented dedicated SQLite checkpointer (sync and async with WAL & busy timeout) and thread checkpoint deletion service for creator data isolation (ADR-007, ADR-024).
 - GRAPH-03 done (2026-10-24): Enforced depth level step budgets (Quick 6, Standard 12, Deep 20) and cycle repeat detection in Supervisor node with degraded run annotations.
 - GRAPH-02 done (2026-10-24): Implemented Supervisor routing with code-calculated node eligibility, structured JSON decision output, and deterministic fallback.

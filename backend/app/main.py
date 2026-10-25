@@ -1,3 +1,5 @@
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from typing import Any
 
 from fastapi import FastAPI, Request, Response, status
@@ -5,13 +7,29 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.config import settings
+from app.db.session import SessionLocal
+from app.scheduler import start_scheduler, stop_scheduler, sync_weekly_brief_job
 from app.services.health import get_health_status
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+    start_scheduler()
+    try:
+        with SessionLocal() as db:
+            sync_weekly_brief_job(db)
+    except Exception:
+        pass
+    yield
+    stop_scheduler()
+
 
 app = FastAPI(
     title="AI Personal Content Strategist API",
     version="0.1.0",
     docs_url="/docs",
     redoc_url="/redoc",
+    lifespan=lifespan,
 )
 
 # CORS configuration

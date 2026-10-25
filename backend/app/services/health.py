@@ -4,6 +4,7 @@ import httpx
 
 from app.config import settings
 from app.db.session import check_database_reachable
+from app.scheduler import get_next_brief_time, is_scheduler_running
 
 
 async def get_health_status() -> dict[str, Any]:
@@ -52,7 +53,7 @@ async def get_health_status() -> dict[str, Any]:
             "installed": both_models_installed,
         },
         "api_key_configured": settings.api_key_configured,
-        "scheduler_running": False,
-        "next_brief_at": None,
+        "scheduler_running": is_scheduler_running(),
+        "next_brief_at": get_next_brief_time(),
         "interrupted_runs_count": 0,
     }
