@@ -17,6 +17,7 @@ from app.config import settings
 from app.db.session import SessionLocal
 from app.scheduler import start_scheduler, stop_scheduler, sync_weekly_brief_job
 from app.services.health import get_health_status
+from app.services.recovery import recover_interrupted_runs
 
 
 @asynccontextmanager
@@ -24,6 +25,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     start_scheduler()
     try:
         with SessionLocal() as db:
+            recover_interrupted_runs(db)
             sync_weekly_brief_job(db)
     except Exception:
         pass

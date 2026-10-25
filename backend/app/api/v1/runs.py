@@ -22,6 +22,7 @@ from app.schemas.runs import (
     RunResponse,
     TaskResponse,
 )
+from app.services.background_worker import cancellation_manager
 
 router = APIRouter(prefix="/runs", tags=["runs"])
 
@@ -203,6 +204,9 @@ def cancel_run(
             code="RUN_ALREADY_FINISHED",
             message=f"Run '{run_id}' is already finished with status '{run.status}'.",
         )
+
+    # Signal cooperative background worker cancellation
+    cancellation_manager.request_cancellation(run_id)
 
     # Cancel pending approvals belonging to this run
     db.query(Approval).filter_by(run_id=run_id, status="PENDING").update({"status": "CANCELLED"})
