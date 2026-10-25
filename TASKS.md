@@ -50,8 +50,8 @@ Goal: a working agentic loop where the route depends on state, including a rejec
 - [x] AGT-01 Build the Listener agent (ReAct)
 - [x] AGT-02 Build the Research agent (ReAct)
 - [x] AGT-03 Build the Strategist agent with plan items and source labels
-- [ ] HITL-01 Build the approval node with LangGraph interrupt and the approval tool
-- [ ] HITL-02 Resume a paused run after a backend restart
+- [x] HITL-01 Build the approval node with LangGraph interrupt and the approval tool
+- [x] HITL-02 Resume a paused run after a backend restart
 - [ ] API-01 Implement runs endpoints
 - [ ] API-02 Implement approvals endpoints
 - [ ] BG-01 Run graphs in a background worker with status updates and cooperative cancellation

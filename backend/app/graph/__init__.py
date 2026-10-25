@@ -1,3 +1,8 @@
+from app.graph.approval import (
+    StaleApprovalError,
+    approval_node,
+    resume_paused_run,
+)
 from app.graph.budgets import (
     DEPTH_CONFIG,
     DepthLimits,
@@ -38,6 +43,9 @@ __all__ = [
     "calculate_eligible_nodes",
     "get_deterministic_default_node",
     "supervisor_node",
+    "approval_node",
+    "resume_paused_run",
+    "StaleApprovalError",
     "DEPTH_CONFIG",
     "DepthLimits",
     "get_depth_limits",
