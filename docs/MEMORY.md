@@ -80,6 +80,7 @@ GRAPH-04: Add the SQLite checkpointer in its own database file
 
 ## Update log
 
+- TOOL-07 done (2026-10-25): Built URL guard for web fetch tools with SSRF protection, loopback/private/metadata IP blocking, redirect validation, streaming response size caps, and timeouts (UT-28, RULES.md).
 - TOOL-04 done (2026-10-25): Built MCP adapter with strict per-agent tool allowlists, refusal and logging of unauthorized tool calls, and provenance tracking (UT-32).
 - TOOL-03 done (2026-10-25): Built state and database tools for content items, comments, insights, plans, and drafts with provenance tracking, ADR-032 channel filtering, and LangChain ReAct tool wrappers (UT-32).
 - TOOL-02 done (2026-10-25): Built comment clusterer with local Ollama embeddings (nomic-embed-text) and scikit-learn, with deterministic output, exact count conservation, 2-3 examples per theme, and zero LLM token consumption (UT-10, ADR-005, ADR-033).
