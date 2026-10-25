@@ -27,6 +27,15 @@ from app.tools.database_tools import (
     save_draft_version,
     save_plan_version,
 )
+from app.tools.listener_tools import (
+    cluster_comments_tool,
+    db_save_comment_insights_tool,
+    db_save_content_item_tool,
+    fetch_comments_tool,
+    register_listener_tools,
+    youtube_channel_lookup_tool,
+    youtube_video_list_tool,
+)
 from app.tools.mcp_adapter import (
     AGENT_TOOL_ALLOWLISTS,
     MCPAdapter,
@@ -66,9 +75,13 @@ __all__ = [
     "UnauthorizedToolCallError",
     "annotate_provenance",
     "cluster_comments",
+    "cluster_comments_tool",
     "db_load_channel_insights_tool",
     "db_load_latest_plan_tool",
+    "db_save_comment_insights_tool",
+    "db_save_content_item_tool",
     "db_save_plan_tool",
+    "fetch_comments_tool",
     "filter_and_rank_comments",
     "get_local_embeddings",
     "is_emoji_only",
@@ -79,6 +92,7 @@ __all__ = [
     "load_latest_draft",
     "load_latest_plan",
     "mcp_adapter",
+    "register_listener_tools",
     "safe_fetch_url",
     "safe_web_fetch_tool",
     "save_comment_insights",
@@ -88,4 +102,6 @@ __all__ = [
     "save_plan_version",
     "validate_url",
     "verify_result_provenance",
+    "youtube_channel_lookup_tool",
+    "youtube_video_list_tool",
 ]

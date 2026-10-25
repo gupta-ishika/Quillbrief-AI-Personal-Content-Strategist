@@ -20,6 +20,7 @@ class ContentState(TypedDict, total=False):
     # Analysis & research context
     comment_insights: list[dict[str, Any]]
     research_results: dict[str, Any]
+    creator_context: dict[str, Any]
 
     # Plan state
     content_plan: list[dict[str, Any]]

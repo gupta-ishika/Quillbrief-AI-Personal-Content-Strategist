@@ -71,6 +71,7 @@ module = [
     "apscheduler.*",
     "langgraph.*",
     "langchain_core.*",
+    "sklearn.*",
 ]
 ignore_missing_imports = true
 disable_error_code = ["import-untyped"]

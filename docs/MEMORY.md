@@ -87,7 +87,15 @@ GRAPH-04: Add the SQLite checkpointer in its own database file
 - TOOL-01 done (2026-10-25): Built comment fetcher tool with author anonymity (ADR-016), spam and emoji-only filtering, deduplication, engagement-recency ranking, depth level capping, and coverage tracking (UT-09).
 - SCHED-00 done (2026-10-25): Built APScheduler scheduler service with SQLAlchemy job store, Weekly Brief job management (gated by onboarding_completed, replaceable on settings update), placeholder target for AGT-07, and lifespan lifecycle in FastAPI.
 - GRAPH-04 done (2026-10-24): Implemented dedicated SQLite checkpointer (sync and async with WAL & busy timeout) and thread checkpoint deletion service for creator data isolation (ADR-007, ADR-024).
-- GRAPH-03 done (2026-10-24): Enforced depth level step budgets (Quick 6, Standard 12, Deep 20) and cycle repeat detection in Supervisor node with degraded run annotations.
+- AGT-01 done (2026-10-25): Built ReAct Listener agent in app/agents/listener.py with depth-budget enforcement (Quick 4, Standard 6, Deep 10 tool steps), 4,000 token input cap, untrusted data boundary directives, 7 registered listener tools in app/tools/listener_tools.py, deterministic synthesis fallback, and database persistence.
+- TOOL-07 done (2026-10-25): Built URL guard in app/tools/url_guard.py with strict scheme checking, SSRF protection against private/loopback/link-local/metadata addresses, redirect validation, and streaming size caps.
+- TOOL-04 done (2026-10-25): Built MCP adapter in app/tools/mcp_adapter.py with per-agent allowlists and provenance tracking.
+- TOOL-03 done (2026-10-25): Built state and database tools in app/tools/database_tools.py with provenance tracking and channel filtering.
+- TOOL-02 done (2026-10-25): Built comment clusterer with local embeddings in app/tools/comment_clusterer.py.
+- TOOL-01 done (2026-10-25): Built comment fetcher in app/tools/comment_fetcher.py with spam and emoji filtering and ranking.
+- SCHED-00 done (2026-10-25): Implemented APScheduler service with SQLAlchemy job store.
+- GRAPH-04 done (2026-10-25): Implemented dedicated SQLite checkpointer in checkpoints.db with thread checkpoint deletion service.
+- GRAPH-03 done (2026-10-25): Enforced depth level step budgets (Quick 6, Standard 12, Deep 20) and cycle repeat detection in Supervisor node with degraded run annotations.
 - GRAPH-02 done (2026-10-24): Implemented Supervisor routing with code-calculated node eligibility, structured JSON decision output, and deterministic fallback.
 - GRAPH-01 done (2026-10-24): Defined LangGraph agent state and Pydantic decision models with strict schema validation.
 - DB-02 done (2026-10-24): Configured SQLite options (PRAGMA foreign_keys, WAL mode, busy_timeout 5000ms) and repository functions for creators, settings, runs, approvals, plans, drafts, comments, and metrics.
