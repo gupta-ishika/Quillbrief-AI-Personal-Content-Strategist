@@ -52,8 +52,8 @@ Goal: a working agentic loop where the route depends on state, including a rejec
 - [x] AGT-03 Build the Strategist agent with plan items and source labels
 - [x] HITL-01 Build the approval node with LangGraph interrupt and the approval tool
 - [x] HITL-02 Resume a paused run after a backend restart
-- [ ] API-01 Implement runs endpoints
-- [ ] API-02 Implement approvals endpoints
+- [x] API-01 Implement runs endpoints
+- [x] API-02 Implement approvals endpoints
 - [ ] BG-01 Run graphs in a background worker with status updates and cooperative cancellation
 - [ ] REC-01 Recover runs at startup: `RUNNING` becomes `INTERRUPTED`, record a recovery event, add resume, keep pending approvals, make tool writes idempotent
 - [ ] VER-01 Plan versioning: lineage, immutable versions, exact-version approvals, `EDITED` and stale-decision handling, cancelled approvals

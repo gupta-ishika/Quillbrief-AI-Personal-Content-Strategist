@@ -3,9 +3,16 @@ from contextlib import asynccontextmanager
 from typing import Any
 
 from fastapi import FastAPI, Request, Response, status
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
+from app.api.errors import (
+    AppException,
+    app_exception_handler,
+    validation_exception_handler,
+)
+from app.api.v1 import v1_router
 from app.config import settings
 from app.db.session import SessionLocal
 from app.scheduler import start_scheduler, stop_scheduler, sync_weekly_brief_job
@@ -31,6 +38,9 @@ app = FastAPI(
     redoc_url="/redoc",
     lifespan=lifespan,
 )
+
+app.add_exception_handler(AppException, app_exception_handler)  # type: ignore[arg-type]
+app.add_exception_handler(RequestValidationError, validation_exception_handler)  # type: ignore[arg-type]
 
 # CORS configuration
 app.add_middleware(
@@ -107,3 +117,6 @@ async def security_headers_middleware(request: Request, call_next: Any) -> Respo
 @app.get("/api/v1/health")
 async def health_check() -> dict[str, Any]:
     return await get_health_status()
+
+
+app.include_router(v1_router)

@@ -97,6 +97,7 @@ GRAPH-04: Add the SQLite checkpointer in its own database file
 - TOOL-01 done (2026-10-25): Built comment fetcher in app/tools/comment_fetcher.py with spam and emoji filtering and ranking.
 - SCHED-00 done (2026-10-25): Implemented APScheduler service with SQLAlchemy job store.
 - GRAPH-04 done (2026-10-25): Implemented dedicated SQLite checkpointer in checkpoints.db with thread checkpoint deletion service.
+- API-01 and API-02 done (2026-10-25): Implemented FastAPI REST endpoints for runs (start, list, get, routing-log, cancel, resume) and approvals (list, get, decision for APPROVED/REJECTED/EDITED) conforming to API.md v1.1 error conventions and local protections.
 - HITL-01 and HITL-02 done (2026-10-25): Implemented human approval node with LangGraph interrupt, Approval table tracking, plan status transitions (APPROVED, REJECTED, and EDITED creator versioning via ADR-029), and process restart resumption across independent sessions using SQLite checkpointer.
 - GRAPH-03 done (2026-10-25): Enforced depth level step budgets (Quick 6, Standard 12, Deep 20) and cycle repeat detection in Supervisor node with degraded run annotations.
 - GRAPH-02 done (2026-10-24): Implemented Supervisor routing with code-calculated node eligibility, structured JSON decision output, and deterministic fallback.
