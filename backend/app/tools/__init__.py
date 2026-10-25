@@ -14,6 +14,19 @@ from app.tools.comment_fetcher import (
     is_spam,
     is_too_short,
 )
+from app.tools.database_tools import (
+    db_load_channel_insights_tool,
+    db_load_latest_plan_tool,
+    db_save_plan_tool,
+    load_channel_insights,
+    load_latest_draft,
+    load_latest_plan,
+    save_comment_insights,
+    save_comments_batch,
+    save_content_item,
+    save_draft_version,
+    save_plan_version,
+)
 
 __all__ = [
     "CleanComment",
@@ -23,9 +36,20 @@ __all__ = [
     "CommentFilterStats",
     "CommentTheme",
     "cluster_comments",
+    "db_load_channel_insights_tool",
+    "db_load_latest_plan_tool",
+    "db_save_plan_tool",
     "filter_and_rank_comments",
     "get_local_embeddings",
     "is_emoji_only",
     "is_spam",
     "is_too_short",
+    "load_channel_insights",
+    "load_latest_draft",
+    "load_latest_plan",
+    "save_comment_insights",
+    "save_comments_batch",
+    "save_content_item",
+    "save_draft_version",
+    "save_plan_version",
 ]

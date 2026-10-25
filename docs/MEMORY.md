@@ -80,6 +80,7 @@ GRAPH-04: Add the SQLite checkpointer in its own database file
 
 ## Update log
 
+- TOOL-03 done (2026-10-25): Built state and database tools for content items, comments, insights, plans, and drafts with provenance tracking, ADR-032 channel filtering, and LangChain ReAct tool wrappers (UT-32).
 - TOOL-02 done (2026-10-25): Built comment clusterer with local Ollama embeddings (nomic-embed-text) and scikit-learn, with deterministic output, exact count conservation, 2-3 examples per theme, and zero LLM token consumption (UT-10, ADR-005, ADR-033).
 - TOOL-01 done (2026-10-25): Built comment fetcher tool with author anonymity (ADR-016), spam and emoji-only filtering, deduplication, engagement-recency ranking, depth level capping, and coverage tracking (UT-09).
 - SCHED-00 done (2026-10-25): Built APScheduler scheduler service with SQLAlchemy job store, Weekly Brief job management (gated by onboarding_completed, replaceable on settings update), placeholder target for AGT-07, and lifespan lifecycle in FastAPI.
