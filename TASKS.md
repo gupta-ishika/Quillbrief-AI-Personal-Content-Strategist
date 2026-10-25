@@ -42,7 +42,7 @@ Goal: a working agentic loop where the route depends on state, including a rejec
 - [x] GRAPH-03 Add the step budget, repeat detection and the routing log
 - [x] GRAPH-04 Add the SQLite checkpointer in its own database file
 - [x] SCHED-00 Scheduler service (APScheduler with the SQLAlchemy job store): create, remove and replace the Weekly Brief job from saved settings. It creates no job until onboarding is completed. Its target is a placeholder that does nothing until the brief exists (AGT-07). Called by `POST /onboarding/complete` and by schedule changes
-- [ ] TOOL-01 Build the comment fetcher (cap, filters, coverage count)
+- [x] TOOL-01 Build the comment fetcher (cap, filters, coverage count)
 - [ ] TOOL-02 Build the comment clusterer with local embeddings
 - [ ] TOOL-03 Build the state and database tools
 - [ ] TOOL-04 Load approved MCP servers through the MCP adapter, with per-agent allowlists
