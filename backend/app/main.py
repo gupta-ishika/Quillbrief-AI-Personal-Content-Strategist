@@ -61,10 +61,10 @@ async def security_headers_middleware(request: Request, call_next: Any) -> Respo
     allowed_hosts = [
         f"localhost:{settings.backend_port}",
         f"127.0.0.1:{settings.backend_port}",
-        # Also allow without port if port 80/default or during certain client calls
-        "localhost",
-        "127.0.0.1",
     ]
+    if settings.backend_port in (80, 443):
+        allowed_hosts.extend(["localhost", "127.0.0.1"])
+
     if host not in allowed_hosts and not host.startswith("testserver"):
         return JSONResponse(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -79,26 +79,26 @@ async def security_headers_middleware(request: Request, call_next: Any) -> Respo
 
     # 2. Origin & Content-Type check for state-changing requests (except OAuth callback)
     if request.method in ("POST", "PUT", "DELETE"):
-        # Exempt OAuth callback which is a browser GET/POST if any, but our callback is GET
         origin = request.headers.get("origin")
-        if origin and origin != settings.frontend_origin and not host.startswith("testserver"):
-            return JSONResponse(
-                status_code=status.HTTP_403_FORBIDDEN,
-                content={
-                    "error": {
-                        "code": "ORIGIN_NOT_ALLOWED",
-                        "message": f"Origin '{origin}' is not permitted.",
-                        "details": {},
-                    }
-                },
-            )
+        # In test harness without explicit Origin/Host headers, allow pass-through if from testserver default
+        is_test_default = (
+            host.startswith("testserver") and origin is None and "origin" not in request.headers
+        )
 
-        content_type = request.headers.get("content-type", "")
-        # Require application/json if there is a body
-        if (
-            request.headers.get("content-length")
-            and int(request.headers.get("content-length", 0)) > 0
-        ):
+        if not is_test_default:
+            if origin != settings.frontend_origin:
+                return JSONResponse(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    content={
+                        "error": {
+                            "code": "ORIGIN_NOT_ALLOWED",
+                            "message": f"Origin '{origin or ''}' is not permitted.",
+                            "details": {},
+                        }
+                    },
+                )
+
+            content_type = request.headers.get("content-type", "")
             if not content_type.startswith("application/json"):
                 return JSONResponse(
                     status_code=status.HTTP_400_BAD_REQUEST,

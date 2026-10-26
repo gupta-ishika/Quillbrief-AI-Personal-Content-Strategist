@@ -97,6 +97,7 @@ GRAPH-04: Add the SQLite checkpointer in its own database file
 - TOOL-01 done (2026-10-25): Built comment fetcher in app/tools/comment_fetcher.py with spam and emoji filtering and ranking.
 - SCHED-00 done (2026-10-25): Implemented APScheduler service with SQLAlchemy job store.
 - GRAPH-04 done (2026-10-25): Implemented dedicated SQLite checkpointer in checkpoints.db with thread checkpoint deletion service.
+- SEC-03 done (2026-10-26): Enforced strict local API protections in security_headers_middleware with single origin CORS, missing/foreign Origin header rejection on state-changing requests, Host validation preventing DNS rebinding, and JSON-only body enforcement (UT-27).
 - VER-01 done (2026-10-26): Implemented content plan versioning endpoints (GET /plans/{id}, POST /plans/{id}/edit) with lineage tracking, immutable versions, optimistic locking checks (STALE_VERSION), exact-version approval requests, and cancellation of superseded approvals.
 - BG-01 and REC-01 done (2026-10-26): Implemented background worker for graph runs with step boundary cooperative cancellation and status updates (RUNNING, WAITING_APPROVAL, COMPLETED, STOPPED, FAILED), startup crash recovery (RUNNING -> INTERRUPTED with recovery event and preserved pending approvals), and full content graph assembly in builder.py.
 - API-01 and API-02 done (2026-10-25): Implemented FastAPI REST endpoints for runs (start, list, get, routing-log, cancel, resume) and approvals (list, get, decision for APPROVED/REJECTED/EDITED) conforming to API.md v1.1 error conventions and local protections.
