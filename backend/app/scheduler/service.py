@@ -147,8 +147,9 @@ def get_next_brief_time() -> str | None:
     if not job:
         return None
 
-    if job.next_run_time:
-        return str(job.next_run_time.isoformat())
+    next_run = getattr(job, "next_run_time", None)
+    if next_run:
+        return str(next_run.isoformat())
 
     # If job is pending and scheduler hasn't computed next_run_time yet
     if hasattr(job, "trigger") and job.trigger is not None:
