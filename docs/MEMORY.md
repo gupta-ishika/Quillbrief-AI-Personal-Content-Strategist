@@ -6,38 +6,13 @@ Update this file after every task. DECISIONS.md holds permanent decisions. This 
 
 ## Current status
 
-Planning is complete in draft form. No code has been written yet.
-
-## Completed
-
-- Project idea defined and scoped (v1 and v2)
-- PRD.md written
-- ARCHITECTURE.md written
-- DATABASE.md, API.md, DESIGN.md and RULES.md written
-- TASKS.md written
-- TEST_PLAN.md, SECURITY.md and DECISIONS.md written
-- README.md and `.env.example` written
-- API-key decision applied (ADR-021)
-- Versioning, scheduling, deletion, platform scope, recovery and local-API rules decided and written into the documents (ADR-022 to ADR-028)
-- SET-01 completed: Git repo initialized, `.gitignore`, `.env.example`, `docs/RULES.md` created, spec docs moved to `docs/` folder
-- SET-02 completed: Backend scaffolded (FastAPI, Ruff, mypy, pytest), virtualenv configured, dependencies installed, health endpoints and security middleware tested cleanly
-- SET-03 completed: Frontend scaffolded (Vite, React, TypeScript, Tailwind CSS, TanStack Query, React Router, Lucide, Vitest, Testing Library, ESLint), verified tests, build, and lint cleanly
-- SET-04 completed: Confirmed Ollama installation, pulled `qwen3.5:4b` and verified `nomic-embed-text:latest`, confirmed exact names and recorded in DECISIONS.md
-- SET-05 completed: Implemented health service checking SQLite DB connection, Ollama reachability, model verification, degradation handling, and API key protection; verified via pytest, ruff, and mypy
-- API-00 completed: Created full field-level Pydantic schemas matching API.md across common, runs, approvals, plans, drafts, briefs, insights, settings, onboarding, and evaluation contracts with comprehensive validation tests
-- DOC-01, DOC-07, DOC-02 completed: Cross-document consistency verified against all 33 ADRs; PRD, ARCHITECTURE, DATABASE, and API specifications are locked (v1.1)
-- MODEL-01 completed: Tested `qwen3.5:4b` using `think=False` on routing (100% accuracy), JSON schema adherence (100%), tool selection (100%), and no-tool precision (100%). Latency averaged 9.6s. ADR-015 limits reviewed and confirmed.
-- MCP-01 to MCP-05 completed: Evaluated servers against Section 11 checklist. Confirmed YouTube `forHandle` parameter for ADR-031 handle resolution; split YouTube tools to custom wrappers for quota/token capping and credential isolation; web search passed with result capping; raw web fetch rejected for SSRF risk and routed through custom URL guard (TOOL-07); Instagram MCP deferred for v1; confirmed official transcript download is unavailable for other creators' videos and prohibited for own videos under read-only rule ADR-009 (`youtube.force-ssl` rejected). All pass/fail results logged in DECISIONS.md.
-- DATA-01 completed: Created realistic fixture datasets (`creator.json`, `videos.json`, `comments.json`, `performance_metrics.json`, `evaluation_cases.json`) in `backend/tests/fixtures/` and verified with unit tests `backend/tests/test_fixtures.py` ensuring anonymity (UT-14) and coverage of all 5 ARCHITECTURE.md 6.4 evaluation routes.
-- DB-01 completed: Created SQLAlchemy 2.0 models and Alembic migrations for all Phase 1 tables: `creators`, `settings`, `goals`, `runs` (including `INTERRUPTED` status and `degraded` indicators), `tasks`, `routing_logs`, `token_usage`, `run_events`, `content_items`, `comments` (with nullable `text` for 90-day retention), `comment_insights`, `comment_insight_sources`, `comment_insight_examples`, `research_findings`, `content_plans`, `plan_items`, `drafts`, `approvals`, and `cache_entries`. Verified with migration application and 22 unit tests.
-- DB-02 completed: Configured SQLite pragmas (`foreign_keys = ON`, `journal_mode = WAL`, `busy_timeout = 5000`) on SQLite engine connections and authored repository modules in `backend/app/db/repositories/` covering `creator`, `settings`, `runs`, `content`, and `plans`. Verified with 26 unit tests covering channel isolation (ADR-032), versioning, and approvals.
-- GRAPH-01 completed: Defined `ContentState` TypedDict and Pydantic decision models (`SupervisorDecision`, `CriticEvaluationDecision`, `DepthIncreaseDecision`, `TaskUpdate`) with strict constraints and extra field forbidding. Verified with 32 unit tests.
-- GRAPH-02 completed: Built Supervisor node with deterministic code-calculated node eligibility (`calculate_eligible_nodes`), single-node direct routing without LLM calls (UT-03), structured model choice (`think=False`), bounded single-retry validation, deterministic code fallback (`get_deterministic_default_node`), run degradation marking, and routing log persistence. Verified with 37 unit tests.
-- GRAPH-03 completed: Added depth level step budgets (`Quick`: 15, `Standard`: 30, `Deep`: 50 per ADR-015/Section 10) and repeat detection algorithms (consecutive 3-node, 2-node alternating cycle, 3-node cycle per UT-04 and UT-05) halting execution with `stop_reason` and writing audit logs to SQLite. Verified with 40 unit tests.
+Phase 1 (The thin agentic core) is 100% complete across both Backend and Frontend.
+- All backend agents (Listener, Researcher, Strategist), Supervisor with cycle/depth limiters, SQLite checkpointer with restart recovery, human approval node with LangGraph interrupt, background worker with cooperative cancellation, versioning lineage, and local API security protections are implemented and verified (173/173 tests passing).
+- All frontend UI modules (app shell & sidebar, typed API client, onboarding wizard with resume and skip, Home screen with live run tracking and degraded run warnings, Approvals inbox and plan review screen with inline editing, and Settings screen) are implemented and verified (8/8 vitest tests passing, 0 lint errors, clean production build).
 
 ## Current task
 
-GRAPH-04: Add the SQLite checkpointer in its own database file
+Phase 2: Writer and Critic loop (AGT-04: Build Writer agent for scripts, titles, descriptions and posts)
 
 ## Key decisions in force
 
@@ -80,6 +55,15 @@ GRAPH-04: Add the SQLite checkpointer in its own database file
 
 ## Update log
 
+- UI-01, UI-02, UI-03, ONB-02 done (2026-10-27): Implemented the full Phase 1 React frontend in accordance with DESIGN 4.0:
+  - Responsive app shell (`AppLayout`, `Sidebar`) with pending approvals badge, system health indicator, tablet icon collapsing, and mobile bottom navigation.
+  - Typed REST API client in `src/api/client.ts` with error handling for API error formats, origin and host headers, and endpoints for onboarding, runs, approvals, plans, and settings.
+  - First-run onboarding wizard (`OnboardingWizard`) replacing the app shell prior to completion: Step 1 Niche with 200-char live validation; Step 2 Tone with 5 preset cards and 500-char optional instructions; Step 3 YouTube channel by handle/ID/URL with local format validation, resolution checks, read-only OAuth initiation, and persistent skip (`POST /onboarding/skip-channel`); Step 4 Review summary with verified/unverified/none badges, read-only API key status, default schedule with Asia/Kolkata timezone, and completion (`POST /onboarding/complete`). Supports seamless resume at review step after skip.
+  - Home screen (`HomeScreen`) with goal text area, 3-level depth selector cards (`quick`, `standard`, `deep`), run launching, active run progress tracking with status badges, step count, token counter, cooperative cancellation modal, restart recovery resumption, and degraded-run alert banner.
+  - Approvals inbox (`ApprovalsInbox`) with oldest-first sorting, item type badges, time waiting, and empty state.
+  - Plan review screen (`PlanReview`) displaying plan item cards with topic, format, platform, objective, rationale, expandable source evidence, inline editing mode creating new version with approval requirement notification, and reject modal requiring feedback text.
+  - Settings screen (`SettingsScreen`) for editing profile and schedule preferences.
+  - Comprehensive unit and integration test suites passing in Vitest (8/8 tests), zero ESLint errors, and clean production build.
 - TOOL-07 done (2026-10-25): Built URL guard for web fetch tools with SSRF protection, loopback/private/metadata IP blocking, redirect validation, streaming response size caps, and timeouts (UT-28, RULES.md).
 - TOOL-04 done (2026-10-25): Built MCP adapter with strict per-agent tool allowlists, refusal and logging of unauthorized tool calls, and provenance tracking (UT-32).
 - TOOL-03 done (2026-10-25): Built state and database tools for content items, comments, insights, plans, and drafts with provenance tracking, ADR-032 channel filtering, and LangChain ReAct tool wrappers (UT-32).

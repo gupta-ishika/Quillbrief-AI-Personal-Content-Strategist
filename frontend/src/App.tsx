@@ -1,6 +1,15 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Sparkles, CheckCircle2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
+import { apiClient } from './api/client';
+import { HealthResponse } from './types';
+import { AppLayout } from './components/layout/AppLayout';
+import { TabId } from './components/layout/Sidebar';
+import { OnboardingWizard } from './components/onboarding/OnboardingWizard';
+import { HomeScreen } from './components/home/HomeScreen';
+import { ApprovalsInbox } from './components/approvals/ApprovalsInbox';
+import { SettingsScreen } from './components/settings/SettingsScreen';
+import { PlaceholderScreen } from './components/common/PlaceholderScreen';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -12,24 +21,137 @@ const queryClient = new QueryClient({
 });
 
 export const AppContent: React.FC = () => {
-  return (
-    <div className="min-h-screen bg-[#F8FAFC] text-[#0F172A] flex flex-col justify-center items-center p-6">
-      <div className="max-w-md w-full bg-white rounded-xl shadow-sm border border-[#E2E8F0] p-8 text-center">
-        <div className="inline-flex items-center justify-center w-12 h-12 bg-indigo-50 text-[#6366F1] rounded-full mb-4">
-          <Sparkles className="w-6 h-6" />
-        </div>
-        <h1 className="text-2xl font-semibold text-[#0F172A] mb-2">
-          AI Personal Content Strategist
-        </h1>
-        <p className="text-sm text-[#64748B] mb-6">
-          Local, multi-agent strategist system for creators.
-        </p>
-        <div className="flex items-center justify-center gap-2 text-xs font-medium text-[#16A34A] bg-green-50 py-2 px-3 rounded-lg border border-green-200">
-          <CheckCircle2 className="w-4 h-4" />
-          <span>Frontend setup complete (React + TypeScript + Tailwind)</span>
-        </div>
+  const [checkingOnboarding, setCheckingOnboarding] = useState<boolean>(true);
+  const [isOnboarded, setIsOnboarded] = useState<boolean>(false);
+  const [currentTab, setCurrentTab] = useState<TabId>('home');
+  const [targetApprovalId, setTargetApprovalId] = useState<string | null>(null);
+  const [pendingApprovalsCount, setPendingApprovalsCount] = useState<number>(0);
+  const [health, setHealth] = useState<HealthResponse | null>(null);
+
+  // Initial onboarding & system check
+  const checkInitialState = async () => {
+    try {
+      const [onb, healthData] = await Promise.all([
+        apiClient.getOnboarding(),
+        apiClient.getHealth().catch(() => null),
+      ]);
+      setIsOnboarded(onb.onboarding_completed);
+      setHealth(healthData);
+
+      if (onb.onboarding_completed) {
+        updateApprovalsBadge();
+      }
+    } catch {
+      // If server unreachable, assume onboarding incomplete or degraded
+      setIsOnboarded(false);
+    } finally {
+      setCheckingOnboarding(false);
+    }
+  };
+
+  const updateApprovalsBadge = async () => {
+    try {
+      const pending = await apiClient.listApprovals('PENDING');
+      setPendingApprovalsCount(pending.length);
+    } catch {
+      // Ignore badge polling errors
+    }
+  };
+
+  useEffect(() => {
+    checkInitialState();
+  }, []);
+
+  // Poll approvals count periodically when onboarded
+  useEffect(() => {
+    if (!isOnboarded) return;
+
+    const interval = setInterval(() => {
+      updateApprovalsBadge();
+    }, 10000);
+
+    return () => clearInterval(interval);
+  }, [isOnboarded]);
+
+  const handleNavigateToApprovals = (approvalId?: string) => {
+    if (approvalId) {
+      setTargetApprovalId(approvalId);
+    }
+    setCurrentTab('approvals');
+    updateApprovalsBadge();
+  };
+
+  if (checkingOnboarding) {
+    return (
+      <div className="min-h-screen bg-[#F8FAFC] flex flex-col items-center justify-center p-6 text-[#64748B]">
+        <Loader2 className="w-8 h-8 animate-spin text-[#6366F1] mb-3" />
+        <p className="text-sm">Connecting to local strategist...</p>
       </div>
-    </div>
+    );
+  }
+
+  // First-run onboarding wizard replaces app shell entirely
+  if (!isOnboarded) {
+    return (
+      <OnboardingWizard
+        onCompleted={() => {
+          setIsOnboarded(true);
+          setCurrentTab('home');
+          updateApprovalsBadge();
+        }}
+      />
+    );
+  }
+
+  return (
+    <AppLayout
+      currentTab={currentTab}
+      onTabChange={(tab) => {
+        setCurrentTab(tab);
+        updateApprovalsBadge();
+      }}
+      pendingApprovalsCount={pendingApprovalsCount}
+      health={health}
+    >
+      {currentTab === 'home' && (
+        <HomeScreen onNavigateToApprovals={handleNavigateToApprovals} />
+      )}
+      {currentTab === 'approvals' && (
+        <ApprovalsInbox
+          initialApprovalId={targetApprovalId}
+          onClearInitialApprovalId={() => setTargetApprovalId(null)}
+        />
+      )}
+      {currentTab === 'briefs' && (
+        <PlaceholderScreen
+          title="Weekly Briefs"
+          description="Curated strategic briefings scheduled weekly based on audience comment trends."
+          phase="Phase 3"
+        />
+      )}
+      {currentTab === 'library' && (
+        <PlaceholderScreen
+          title="Drafts Library"
+          description="Review ready-to-post scripts, descriptions, and repurposed social posts."
+          phase="Phase 2"
+        />
+      )}
+      {currentTab === 'insights' && (
+        <PlaceholderScreen
+          title="Audience Insights"
+          description="Extracted comment themes, sentiment patterns, and analyst findings."
+          phase="Phase 4"
+        />
+      )}
+      {currentTab === 'runs' && (
+        <PlaceholderScreen
+          title="Execution Runs"
+          description="Supervisor routing history, task lists, and token usage timelines."
+          phase="Phase 3"
+        />
+      )}
+      {currentTab === 'settings' && <SettingsScreen />}
+    </AppLayout>
   );
 };
 

@@ -58,11 +58,11 @@ Goal: a working agentic loop where the route depends on state, including a rejec
 - [x] REC-01 Recover runs at startup: `RUNNING` becomes `INTERRUPTED`, record a recovery event, add resume, keep pending approvals, make tool writes idempotent
 - [x] VER-01 Plan versioning: lineage, immutable versions, exact-version approvals, `EDITED` and stale-decision handling, cancelled approvals
 - [x] SEC-03 Add CORS for one origin, Origin and Host checks, and the JSON-only rule for state-changing requests
-- [ ] UI-01 Build the app shell, sidebar and API client
-- [ ] UI-02 Build the Home screen with the goal box and depth selector
-- [ ] UI-03 Build the Approvals inbox and plan review screen
+- [x] UI-01 Build the app shell, sidebar and API client
+- [x] UI-02 Build the Home screen with the goal box and depth selector
+- [x] UI-03 Build the Approvals inbox and plan review screen
 - [x] ONB-01 Onboarding backend: settings fields (`niche`, `tone_preset`, `tone_instructions`, `onboarding_channel_skipped`, `onboarding_completed`) with server-side validation (200 and 500 characters, control characters) through a partial `PUT /settings`. `GET /onboarding`, `POST /onboarding/skip-channel`, `POST /onboarding/complete` (calls SCHED-00), `POST /channel/resolve` with local identifier parsing, and `PUT` and `DELETE /creator/channel`. The `creators` row is created at the first save. Runs and manual briefs return 409 `ONBOARDING_REQUIRED` until completed. Channel changes keep stored content (ADR-032)
-- [ ] ONB-02 Onboarding UI (DESIGN 4.0: niche, tone, channel by handle, skip, review), with per-step saves, resume (including resuming at Review after a skip), and loading, empty and error states
+- [x] ONB-02 Onboarding UI (DESIGN 4.0: niche, tone, channel by handle, skip, review), with per-step saves, resume (including resuming at Review after a skip), and loading, empty and error states
 - [x] PROF-01 Build the creator-profile object in code from settings (declared fields only, `profile_source = "declared"`) and pass it to the Writer and Critic inside the marked untrusted-data section of the prompt
 - [x] TEST-01 Test routes for new creator, established creator and rejected plan, plus plan edit, stale approval, recovery, cancel during a tool call, Origin and Host checks, and the URL guard
 - [x] TEST-07 Test failure paths: invalid Supervisor JSON, repeated invalid tool arguments, unavailable MCP server, structured tool errors, Ollama unavailable during a run, budget reached while waiting, and the degraded-run indicator
