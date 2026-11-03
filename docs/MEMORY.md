@@ -6,13 +6,15 @@ Update this file after every task. DECISIONS.md holds permanent decisions. This 
 
 ## Current status
 
-Phase 1 (The thin agentic core) is 100% complete across both Backend and Frontend.
-- All backend agents (Listener, Researcher, Strategist), Supervisor with cycle/depth limiters, SQLite checkpointer with restart recovery, human approval node with LangGraph interrupt, background worker with cooperative cancellation, versioning lineage, and local API security protections are implemented and verified (173/173 tests passing).
-- All frontend UI modules (app shell & sidebar, typed API client, onboarding wizard with resume and skip, Home screen with live run tracking and degraded run warnings, Approvals inbox and plan review screen with inline editing, and Settings screen) are implemented and verified (8/8 vitest tests passing, 0 lint errors, clean production build).
+Phase 1 is 100% complete across both Backend and Frontend.
+Phase 2 (Writer and Critic loop) is in active development:
+- AGT-04 (Writer Agent): Supports scripts, titles, descriptions, captions, and posts with 4,000 token limit, untrusted-data boundary directives, declared-only creator profile, versioned lineage persistence, and deterministic fallbacks.
+- TOOL-05 (Draft Checker): Deterministic quality checks for word/character counts, platform length limits, and required sections (Hook, Body, CTA) using zero LLM tokens.
+- AGT-05 (Critic Agent): 5-dimension rubric scoring (Hook, Tone, Accuracy, Length, Relevance), deterministic check enforcement (blocking passing if deterministic checks fail), review limits by depth (Quick 2, Standard 3, Deep 3), best-draft selection in lineage when reviews are exhausted, and persistent evaluation records.
 
 ## Current task
 
-Phase 2: Writer and Critic loop (AGT-04: Build Writer agent for scripts, titles, descriptions and posts)
+Phase 2: Writer and Critic loop (GRAPH-05: Add the Writer to Critic loop and best-draft selection)
 
 ## Key decisions in force
 
@@ -55,6 +57,11 @@ Phase 2: Writer and Critic loop (AGT-04: Build Writer agent for scripts, titles,
 
 ## Update log
 
+- AGT-04, TOOL-05, AGT-05 done (2026-11-03): Implemented the Writer agent, deterministic Draft Checker, and Critic agent for Phase 2:
+  - Writer agent (`app/agents/writer.py`) producing structured drafts for scripts, titles, descriptions, captions, and posts adhering to 4,000 token limit, declared-only creator profile, untrusted data boundary directives, and immutable draft versioning.
+  - Draft checker (`app/tools/draft_checker.py`) enforcing word count, character count, format-required sections (Hook, Body, CTA), and platform length limits for YouTube, Instagram, LinkedIn, and X with zero LLM token consumption.
+  - Critic agent (`app/agents/critic.py`) scoring drafts against 5 rubric dimensions (Hook, Tone, Accuracy, Length, Relevance), enforcing deterministic check failures as hard blockers for passing, depth-dependent review limits (Quick: 2, Standard: 3, Deep: 3), best-draft selection across lineage on review exhaustion, and persistence in `critic_evaluations` table.
+  - Full test suite verified with all 14 tests passing in `test_draft_checker.py`, `test_writer_agent.py`, and `test_critic_agent.py`, 0 Ruff errors, and 0 Mypy errors across 67 source files.
 - UI-01, UI-02, UI-03, ONB-02 done (2026-10-27): Implemented the full Phase 1 React frontend in accordance with DESIGN 4.0:
   - Responsive app shell (`AppLayout`, `Sidebar`) with pending approvals badge, system health indicator, tablet icon collapsing, and mobile bottom navigation.
   - Typed REST API client in `src/api/client.ts` with error handling for API error formats, origin and host headers, and endpoints for onboarding, runs, approvals, plans, and settings.

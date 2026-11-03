@@ -74,9 +74,9 @@ Goal: a working agentic loop where the route depends on state, including a rejec
 
 Goal: controlled iteration that improves draft quality.
 
-- [ ] AGT-04 Build the Writer agent for scripts, titles, descriptions and posts
-- [ ] TOOL-05 Build the draft checker
-- [ ] AGT-05 Build the Critic with rubric scoring, structured feedback and the review limit
+- [x] AGT-04 Build the Writer agent for scripts, titles, descriptions and posts
+- [x] TOOL-05 Build the draft checker
+- [x] AGT-05 Build the Critic with rubric scoring, structured feedback and the review limit
 - [ ] GRAPH-05 Add the Writer to Critic loop and best-draft selection
 - [ ] DB-03 Add drafts (with lineage, versions and posted reference) and critic_evaluations
 - [ ] VER-02 Draft versioning: every edit or revision creates a version, approval ties to the exact version, editing approved content invalidates the approval, creator edits run the deterministic checks only, mark-as-posted records the approved version
