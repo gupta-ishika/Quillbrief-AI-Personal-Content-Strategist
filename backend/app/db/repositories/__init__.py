@@ -14,11 +14,16 @@ from app.db.repositories.creator import (
 )
 from app.db.repositories.plans import (
     create_approval,
+    create_critic_evaluation,
     create_draft_version,
     create_plan_version,
     decide_approval,
+    get_critic_evaluation_for_draft,
+    get_draft_by_id,
+    get_drafts_by_lineage,
     get_latest_draft_version,
     get_latest_plan_version,
+    update_draft_status,
 )
 from app.db.repositories.runs import (
     create_goal,
@@ -68,4 +73,9 @@ __all__ = [
     "get_latest_draft_version",
     "create_approval",
     "decide_approval",
+    "create_critic_evaluation",
+    "get_critic_evaluation_for_draft",
+    "get_draft_by_id",
+    "get_drafts_by_lineage",
+    "update_draft_status",
 ]

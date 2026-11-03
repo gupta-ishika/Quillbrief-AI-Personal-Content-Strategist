@@ -149,6 +149,18 @@ def create_critic_evaluation(
     deterministic_json: dict[str, Any],
     feedback_json: dict[str, Any],
 ) -> CriticEvaluation:
+    existing = db.query(CriticEvaluation).filter_by(draft_id=draft_id).first()
+    if existing:
+        existing.review_number = review_number
+        existing.score = score
+        existing.passed = passed
+        existing.rubric_json = rubric_json
+        existing.deterministic_json = deterministic_json
+        existing.feedback_json = feedback_json
+        db.commit()
+        db.refresh(existing)
+        return existing
+
     evaluation = CriticEvaluation(
         draft_id=draft_id,
         review_number=review_number,
@@ -185,3 +197,7 @@ def update_draft_status(
     db.commit()
     db.refresh(draft)
     return draft
+
+
+def get_drafts_by_lineage(db: Session, lineage_id: str) -> list[Draft]:
+    return db.query(Draft).filter_by(lineage_id=lineage_id).order_by(Draft.version.asc()).all()
