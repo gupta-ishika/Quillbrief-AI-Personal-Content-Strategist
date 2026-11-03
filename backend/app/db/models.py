@@ -6,6 +6,7 @@ from sqlalchemy import (
     Boolean,
     CheckConstraint,
     DateTime,
+    Float,
     ForeignKey,
     Index,
     Integer,
@@ -428,6 +429,34 @@ class Draft(Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utc_now, onupdate=utc_now
     )
+
+    critic_evaluation: Mapped["CriticEvaluation | None"] = relationship(
+        "CriticEvaluation", back_populates="draft", uselist=False, cascade="all, delete-orphan"
+    )
+
+
+class CriticEvaluation(Base):
+    __tablename__ = "critic_evaluations"
+    __table_args__ = (
+        CheckConstraint(
+            "review_number BETWEEN 1 AND 3", name="ck_critic_evaluations_review_number"
+        ),
+        UniqueConstraint("draft_id", name="uq_critic_evaluations_draft_id"),
+    )
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
+    draft_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("drafts.id", ondelete="CASCADE"), unique=True
+    )
+    review_number: Mapped[int] = mapped_column(Integer)
+    score: Mapped[float] = mapped_column(Float)
+    passed: Mapped[bool] = mapped_column(Boolean, default=False)
+    rubric_json: Mapped[Any] = mapped_column(JSON)
+    deterministic_json: Mapped[Any] = mapped_column(JSON)
+    feedback_json: Mapped[Any] = mapped_column(JSON)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+
+    draft: Mapped["Draft"] = relationship("Draft", back_populates="critic_evaluation")
 
 
 class Approval(Base):

@@ -3,7 +3,7 @@ from typing import Any
 from sqlalchemy.orm import Session
 
 from app.db.base import generate_uuid, utc_now
-from app.db.models import Approval, ContentPlan, Draft, PlanItem
+from app.db.models import Approval, ContentPlan, CriticEvaluation, Draft, PlanItem
 
 
 def create_plan_version(
@@ -137,3 +137,51 @@ def decide_approval(
     db.commit()
     db.refresh(approval)
     return approval
+
+
+def create_critic_evaluation(
+    db: Session,
+    draft_id: str,
+    review_number: int,
+    score: float,
+    passed: bool,
+    rubric_json: dict[str, Any],
+    deterministic_json: dict[str, Any],
+    feedback_json: dict[str, Any],
+) -> CriticEvaluation:
+    evaluation = CriticEvaluation(
+        draft_id=draft_id,
+        review_number=review_number,
+        score=score,
+        passed=passed,
+        rubric_json=rubric_json,
+        deterministic_json=deterministic_json,
+        feedback_json=feedback_json,
+    )
+    db.add(evaluation)
+    db.commit()
+    db.refresh(evaluation)
+    return evaluation
+
+
+def get_critic_evaluation_for_draft(db: Session, draft_id: str) -> CriticEvaluation | None:
+    return db.query(CriticEvaluation).filter_by(draft_id=draft_id).first()
+
+
+def get_draft_by_id(db: Session, draft_id: str) -> Draft | None:
+    return db.query(Draft).filter_by(id=draft_id).first()
+
+
+def update_draft_status(
+    db: Session,
+    draft_id: str,
+    status: str,
+) -> Draft | None:
+    draft = db.query(Draft).filter_by(id=draft_id).first()
+    if not draft:
+        return None
+    draft.status = status
+    draft.updated_at = utc_now()
+    db.commit()
+    db.refresh(draft)
+    return draft
