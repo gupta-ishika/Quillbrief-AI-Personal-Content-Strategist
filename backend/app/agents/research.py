@@ -8,7 +8,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.config import settings
-from app.graph.budgets import get_depth_limits
+from app.graph.budgets import get_depth_limits, trim_messages_to_token_limit
 from app.graph.state import ContentState
 from app.tools.mcp_adapter import UnauthorizedToolCallError, mcp_adapter
 
@@ -174,8 +174,12 @@ def deterministic_research_fallback(
     # Derive from searches if any
     for s in searches:
         for r in s.get("results", []):
-            url = r.get("url", "")
-            title = r.get("title", "")
+            if isinstance(r, dict):
+                url = r.get("url", "")
+                title = r.get("title", "")
+            else:
+                url = ""
+                title = str(r)
             if url and url not in sources:
                 sources.append(url)
             if title and len(opportunities) < 3:
@@ -257,6 +261,7 @@ async def run_research_react_loop(
     # Local accumulators
     collected_searches: list[dict[str, Any]] = []
     collected_videos: list[dict[str, Any]] = []
+    collected_pages: list[dict[str, Any]] = []
 
     tokens_in = 0
     tokens_out = 0
@@ -282,17 +287,18 @@ async def run_research_react_loop(
     result_data: ResearchResult | None = None
 
     for _step in range(max_steps):
-        # 1. Query LLM
+        # 1. Query LLM with per-call input token enforcement (ARCHITECTURE.md Section 10)
+        trimmed_messages = trim_messages_to_token_limit(messages, RESEARCH_TOKEN_LIMIT)
         response_json: dict[str, Any] | None = None
         try:
-            resp_dict, _ = await request_research_llm(messages, client=client)
+            resp_dict, _ = await request_research_llm(trimmed_messages, client=client)
             tokens_in += int(resp_dict.get("prompt_eval_count") or 0)
             tokens_out += int(resp_dict.get("eval_count") or 0)
             response_json = resp_dict
         except Exception as e:
             logger.warning("Research LLM call attempt 1 failed: %s. Retrying once.", e)
             try:
-                resp_dict, _ = await request_research_llm(messages, client=client)
+                resp_dict, _ = await request_research_llm(trimmed_messages, client=client)
                 tokens_in += int(resp_dict.get("prompt_eval_count") or 0)
                 tokens_out += int(resp_dict.get("eval_count") or 0)
                 response_json = resp_dict
@@ -356,7 +362,7 @@ async def run_research_react_loop(
             )
             break
 
-        # 3. Tool execution via allowlist
+        # 3. Tool execution via allowlist and depth limit enforcement
         tool_name = decision.tool
         tool_args = decision.args
 
@@ -365,20 +371,37 @@ async def run_research_react_loop(
             tool_args["query"] = niche
 
         observation: dict[str, Any]
-        try:
-            observation = mcp_adapter.execute_for_agent("research", tool_name, tool_args)
-        except UnauthorizedToolCallError as unauth_err:
-            logger.warning("Research unauthorized tool attempted: %s", unauth_err)
-            observation = {"error": str(unauth_err), "status": "unauthorized_tool"}
-            degraded = True
-            degraded_reason = f"Research attempted unauthorized tool '{tool_name}'."
-        except Exception as tool_err:
-            logger.warning("Research tool '%s' error: %s", tool_name, tool_err)
-            observation = {"error": str(tool_err), "status": "tool_failure"}
+        if tool_name == "web_search" and len(collected_searches) >= limits.max_searches:
+            observation = {
+                "error": f"Search limit reached ({limits.max_searches} searches) for depth level '{depth_level}'.",
+                "status": "limit_reached",
+            }
+        elif tool_name == "fetch_page" and len(collected_pages) >= limits.max_pages:
+            observation = {
+                "error": f"Page fetch limit reached ({limits.max_pages} pages) for depth level '{depth_level}'.",
+                "status": "limit_reached",
+            }
+        else:
+            if tool_name == "youtube_video_search":
+                requested_max = int(tool_args.get("max_results") or limits.max_videos)
+                tool_args["max_results"] = min(requested_max, limits.max_videos)
+
+            try:
+                observation = mcp_adapter.execute_for_agent("research", tool_name, tool_args)
+            except UnauthorizedToolCallError as unauth_err:
+                logger.warning("Research unauthorized tool attempted: %s", unauth_err)
+                observation = {"error": str(unauth_err), "status": "unauthorized_tool"}
+                degraded = True
+                degraded_reason = f"Research attempted unauthorized tool '{tool_name}'."
+            except Exception as tool_err:
+                logger.warning("Research tool '%s' error: %s", tool_name, tool_err)
+                observation = {"error": str(tool_err), "status": "tool_failure"}
 
         # Track results for fallback synthesis
-        if tool_name == "web_search":
+        if tool_name == "web_search" and observation.get("status") != "limit_reached":
             collected_searches.append(observation)
+        elif tool_name == "fetch_page" and observation.get("status") != "limit_reached":
+            collected_pages.append(observation)
         elif tool_name == "youtube_video_search" and isinstance(observation.get("videos"), list):
             collected_videos.extend(observation["videos"])
 

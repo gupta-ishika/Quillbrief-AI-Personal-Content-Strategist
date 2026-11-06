@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 from app.config import settings
 from app.db.base import generate_uuid
 from app.db.session import SessionLocal
+from app.graph.budgets import trim_messages_to_token_limit
 from app.graph.state import ContentState
 from app.schemas.plans import SourceType
 from app.tools.database_tools import save_plan_version
@@ -315,9 +316,10 @@ async def strategist_node(
 
     plan_output: StrategistPlanOutput | None = None
 
-    # 1. Query LLM
+    # 1. Query LLM with per-call input token limit enforcement (ARCHITECTURE.md Section 10)
+    trimmed_messages = trim_messages_to_token_limit(messages, STRATEGIST_TOKEN_LIMIT)
     try:
-        resp_dict, _ = await request_strategist_llm(messages, client=client)
+        resp_dict, _ = await request_strategist_llm(trimmed_messages, client=client)
         tokens_in += int(resp_dict.get("prompt_eval_count") or 0)
         tokens_out += int(resp_dict.get("eval_count") or 0)
         content_str = resp_dict.get("message", {}).get("content", "")
@@ -327,7 +329,7 @@ async def strategist_node(
     except Exception as e:
         logger.warning("Strategist LLM call attempt 1 failed: %s. Retrying once.", e)
         try:
-            resp_dict, _ = await request_strategist_llm(messages, client=client)
+            resp_dict, _ = await request_strategist_llm(trimmed_messages, client=client)
             tokens_in += int(resp_dict.get("prompt_eval_count") or 0)
             tokens_out += int(resp_dict.get("eval_count") or 0)
             content_str = resp_dict.get("message", {}).get("content", "")

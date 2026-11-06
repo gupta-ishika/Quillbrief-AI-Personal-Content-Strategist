@@ -7,12 +7,19 @@ import httpx
 from sqlalchemy.orm import Session
 
 from app.config import settings
-from app.db.repositories.runs import create_routing_log, sync_run_tasks
-from app.graph.budgets import detect_routing_repeat, is_step_budget_exceeded
+from app.db.repositories.runs import create_routing_log, record_run_event, sync_run_tasks
+from app.graph.budgets import (
+    detect_routing_repeat,
+    is_step_budget_exceeded,
+    trim_messages_to_token_limit,
+)
 from app.graph.decisions import NodeName, SupervisorDecision
 from app.graph.state import ContentState, TaskDict
 
 logger = logging.getLogger(__name__)
+
+
+SUPERVISOR_TOKEN_LIMIT = 1500
 
 
 def calculate_eligible_nodes(state: ContentState) -> list[NodeName]:
@@ -517,7 +524,7 @@ def build_supervisor_prompt(
     state: ContentState, eligible_nodes: list[NodeName]
 ) -> list[dict[str, str]]:
     profile = state.get("creator_profile", {})
-    return [
+    raw_messages = [
         {
             "role": "system",
             "content": (
@@ -543,6 +550,7 @@ def build_supervisor_prompt(
             ),
         },
     ]
+    return trim_messages_to_token_limit(raw_messages, SUPERVISOR_TOKEN_LIMIT)
 
 
 async def supervisor_node(
@@ -564,9 +572,18 @@ async def supervisor_node(
     run_id = state.get("run_id", "")
     from_node = state.get("next_action", "supervisor")
 
-    # Check 1: Step budget enforcement (UT-04 / ARCHITECTURE.md Section 10)
+    # Check 1: Step budget enforcement (UT-04, IT-05 / ARCHITECTURE.md Section 10)
     budget_exceeded, budget_reason = is_step_budget_exceeded(state)
     if budget_exceeded:
+        budget_tasks = state.get("task_list", [])
+        unfinished = [
+            str(t.get("title") or t.get("agent", "task"))
+            for t in budget_tasks
+            if t.get("status") not in ("DONE", "SKIPPED")
+        ]
+        unfinished_info = f" Unfinished tasks: {', '.join(unfinished)}." if unfinished else ""
+        full_reason = f"{budget_reason}{unfinished_info}"
+
         if db_session and run_id:
             try:
                 create_routing_log(
@@ -575,18 +592,30 @@ async def supervisor_node(
                     step_number=step_number,
                     from_node=from_node,
                     to_node="END",
-                    reason=budget_reason or "Step budget exceeded",
+                    reason=full_reason,
                     decided_by="code",
                     eligible_nodes=["END"],
                     output_status="valid",
                 )
+                record_run_event(
+                    db=db_session,
+                    run_id=run_id,
+                    event_type="limit_reached",
+                    payload={
+                        "limit": "step_budget",
+                        "depth_level": state.get("depth_level", "standard"),
+                        "steps": step_number,
+                        "reason": full_reason,
+                        "unfinished_tasks": unfinished,
+                    },
+                )
             except Exception as e:
-                logger.warning("Failed to record routing log: %s", e)
+                logger.warning("Failed to record routing log or limit event: %s", e)
         return {
             "next_action": "END",
             "stop_reason": "step_budget_exceeded",
             "degraded": True,
-            "degraded_reason": budget_reason,
+            "degraded_reason": full_reason,
             "execution_steps": step_number,
         }
 

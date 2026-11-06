@@ -175,7 +175,13 @@ def _process_chunk(session: Session, run_id: str, chunk: Any) -> None:
                 tokens = node_update.get("tokens_used")
                 degraded = node_update.get("degraded")
                 degraded_reason = node_update.get("degraded_reason")
-                if step_count is not None or tokens is not None:
+                stop_reason = node_update.get("stop_reason")
+                if (
+                    step_count is not None
+                    or tokens is not None
+                    or stop_reason is not None
+                    or degraded is not None
+                ):
                     r = get_run(session, run_id)
                     if r:
                         if step_count is not None:
@@ -186,6 +192,8 @@ def _process_chunk(session: Session, run_id: str, chunk: Any) -> None:
                             r.degraded = degraded
                         if degraded_reason is not None:
                             r.degraded_reason = degraded_reason
+                        if stop_reason is not None:
+                            r.stop_reason = stop_reason
                         session.commit()
 
 
@@ -219,7 +227,10 @@ def _handle_waiting_approval(db: Session, run_id: str) -> None:
 def _handle_completed(db: Session, run_id: str) -> None:
     run = get_run(db, run_id)
     if run and run.status not in ("STOPPED", "FAILED"):
-        run.status = "COMPLETED"
+        if run.stop_reason in ("step_budget_exceeded", "repeat_detected"):
+            run.status = "STOPPED"
+        else:
+            run.status = "COMPLETED"
         run.finished_at = utc_now()
         run.updated_at = utc_now()
         db.commit()

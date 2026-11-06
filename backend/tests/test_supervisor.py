@@ -465,3 +465,62 @@ def test_apply_task_updates_skip_and_repeat_transitions() -> None:
     )
     assert repeat_research_task is not None
     assert repeat_research_task["status"] == "TODO"
+
+
+@pytest.mark.asyncio
+async def test_ut04_step_budget_enforcement_and_unfinished_reporting(db_session: Session) -> None:
+    """UT-04 / IT-05: Run stops at the depth level's step limit with stop_reason set and reports unfinished tasks."""
+    from app.db.models import RunEvent
+
+    run = create_run(db_session, run_type="goal", depth_level="quick")
+
+    tasks = [
+        {"id": "t1", "title": "Analyze comments", "agent": "listener", "position": 1, "status": "DONE"},
+        {"id": "t2", "title": "Draft script", "agent": "writer", "position": 2, "status": "TODO"},
+        {"id": "t3", "title": "Critic review", "agent": "critic", "position": 3, "status": "TODO"},
+    ]
+
+    state_budget_reached: ContentState = {
+        "run_id": run.id,
+        "depth_level": "quick",  # limit = 15
+        "execution_steps": 15,
+        "task_list": tasks,
+        "creator_profile": {"niche": "AI Tech"},
+        "user_goal": "Create viral video",
+        "comment_insights": [{"theme": "AI"}],
+        "research_results": {"opportunities": [{"topic": "AI"}]},
+        "content_plan": [{"topic": "AI"}],
+    }
+
+    result = await supervisor_node(state_budget_reached, db_session=db_session)
+
+    assert result["next_action"] == "END"
+    assert result["stop_reason"] == "step_budget_exceeded"
+    assert result["degraded"] is True
+    # Verifies unfinished tasks reporting (IT-05)
+    assert "Draft script" in result["degraded_reason"]
+    assert "Critic review" in result["degraded_reason"]
+
+    # Verifies limit_reached run event is recorded
+    event = db_session.query(RunEvent).filter_by(run_id=run.id, event_type="limit_reached").first()
+    assert event is not None
+    assert event.payload_json["limit"] == "step_budget"
+    assert "Draft script" in event.payload_json["unfinished_tasks"]
+
+
+def test_trim_messages_to_token_limit() -> None:
+    """Tests per-agent token limit trimming heuristic preserving system prompt."""
+    from app.graph.budgets import trim_messages_to_token_limit
+
+    # Token limit 100 -> max_chars = 400
+    messages = [
+        {"role": "system", "content": "You are a helpful assistant." * 5},  # ~140 chars
+        {"role": "user", "content": "Tell me about python architecture." * 20},  # ~640 chars
+    ]
+
+    trimmed = trim_messages_to_token_limit(messages, max_tokens=100)
+    assert len(trimmed) == 2
+    assert "You are a helpful assistant." in trimmed[0]["content"]
+    assert "truncated to fit token limit" in trimmed[1]["content"]
+    total_len = sum(len(m["content"]) for m in trimmed)
+    assert total_len <= 500  # Within bounds

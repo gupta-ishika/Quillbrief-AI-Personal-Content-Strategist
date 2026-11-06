@@ -311,3 +311,48 @@ async def test_research_node_llm_failure_graceful_fallback() -> None:
         assert "Connection refused" in updates["degraded_reason"]
         assert len(updates["research_results"]["opportunities"]) > 0
         assert updates["next_action"] == "supervisor"
+
+
+@pytest.mark.asyncio
+async def test_research_node_search_limit_enforcement() -> None:
+    """UT-12 / ARCHITECTURE.md Section 10: Research agent enforces max_searches depth limit."""
+    state: ContentState = {
+        "run_id": "run_limit_search",
+        "depth_level": "quick",  # max_searches = 3
+        "creator_profile": {
+            "creator_id": "creator_01",
+            "niche": "Testing",
+        },
+        "user_goal": "Deep research",
+    }
+
+    # Simulate model repeatedly asking for web_search
+    search_decision = (
+        {
+            "message": {
+                "content": json.dumps(
+                    {
+                        "thought": "Searching web",
+                        "action": "tool",
+                        "tool": "web_search",
+                        "args": {"query": "pytest"},
+                    }
+                )
+            },
+            "prompt_eval_count": 50,
+            "eval_count": 25,
+        },
+        0.05,
+    )
+
+    with patch(
+        "app.agents.research.request_research_llm", return_value=search_decision
+    ), patch(
+        "app.tools.mcp_adapter.mcp_adapter.execute_for_agent",
+        return_value={"results": ["Search result 1"]},
+    ) as mock_tool:
+        updates = await research_node(state)
+        # For quick, max_searches is 3, max_tool_steps is 4
+        # Tool was executed 3 times, then 4th attempt triggered limit_reached
+        assert mock_tool.call_count == 3
+        assert updates["next_action"] == "supervisor"

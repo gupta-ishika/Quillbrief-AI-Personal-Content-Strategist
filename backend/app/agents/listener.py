@@ -8,7 +8,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.config import settings
-from app.graph.budgets import get_depth_limits
+from app.graph.budgets import get_depth_limits, trim_messages_to_token_limit
 from app.graph.state import ContentState
 from app.tools.database_tools import (
     load_channel_insights,
@@ -234,17 +234,18 @@ async def run_listener_react_loop(
     context_result: ListenerContext | None = None
 
     for _step in range(max_steps):
-        # 1. Query LLM
+        # 1. Query LLM with per-call input token enforcement (ARCHITECTURE.md Section 10)
+        trimmed_messages = trim_messages_to_token_limit(messages, LISTENER_TOKEN_LIMIT)
         response_json: dict[str, Any] | None = None
         try:
-            resp_dict, _ = await request_listener_llm(messages, client=client)
+            resp_dict, _ = await request_listener_llm(trimmed_messages, client=client)
             tokens_in += int(resp_dict.get("prompt_eval_count") or 0)
             tokens_out += int(resp_dict.get("eval_count") or 0)
             response_json = resp_dict
         except Exception as e:
             logger.warning("Listener LLM call attempt 1 failed: %s. Retrying once.", e)
             try:
-                resp_dict, _ = await request_listener_llm(messages, client=client)
+                resp_dict, _ = await request_listener_llm(trimmed_messages, client=client)
                 tokens_in += int(resp_dict.get("prompt_eval_count") or 0)
                 tokens_out += int(resp_dict.get("eval_count") or 0)
                 response_json = resp_dict
@@ -302,8 +303,12 @@ async def run_listener_react_loop(
         # Inject default channel ID or depth cap if omitted
         if "channel_external_id" not in tool_args and "channel_id" not in tool_args:
             tool_args["channel_external_id"] = channel_id
-        if tool_name == "fetch_comments" and "cap" not in tool_args:
-            tool_args["cap"] = limits.max_comments
+        if tool_name == "fetch_comments":
+            requested_cap = int(tool_args.get("cap") or limits.max_comments)
+            tool_args["cap"] = min(requested_cap, limits.max_comments)
+        elif tool_name == "youtube_video_list":
+            requested_max = int(tool_args.get("max_results") or limits.max_videos)
+            tool_args["max_results"] = min(requested_max, limits.max_videos)
 
         observation: dict[str, Any]
         try:

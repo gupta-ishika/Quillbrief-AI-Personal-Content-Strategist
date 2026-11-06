@@ -50,6 +50,57 @@ DEPTH_CONFIG: dict[Literal["quick", "standard", "deep"], DepthLimits] = {
 }
 
 
+AGENT_TOKEN_LIMITS: dict[str, int] = {
+    "supervisor": 1500,
+    "listener": 4000,
+    "research": 6000,
+    "strategist": 6000,
+    "writer": 4000,
+    "critic": 3000,
+}
+
+
+def trim_messages_to_token_limit(
+    messages: list[dict[str, str]],
+    max_tokens: int,
+) -> list[dict[str, str]]:
+    """Enforces per-call input token limits across agents (ARCHITECTURE.md Section 10).
+
+    Uses a 4 characters/token heuristic. If the total length exceeds max_tokens * 4,
+    the user and observation messages are proportionally truncated while preserving the system prompt.
+    """
+    max_chars = max_tokens * 4
+    total_chars = sum(len(m.get("content", "")) for m in messages)
+    if total_chars <= max_chars:
+        return messages
+
+    result: list[dict[str, str]] = []
+    budget_left = max_chars
+
+    # 1. System prompt preserved (up to 50% budget)
+    for m in messages:
+        if m.get("role") == "system":
+            sys_content = m.get("content", "")
+            if len(sys_content) > max_chars // 2:
+                sys_content = sys_content[: max_chars // 2] + "\n[...system prompt truncated...]"
+            result.append({"role": "system", "content": sys_content})
+            budget_left -= len(sys_content)
+
+    # 2. Non-system messages
+    non_sys = [m for m in messages if m.get("role") != "system"]
+    if not non_sys:
+        return result
+
+    chars_per_msg = max(200, budget_left // len(non_sys))
+    for m in non_sys:
+        content = m.get("content", "")
+        if len(content) > chars_per_msg:
+            content = content[:chars_per_msg] + "\n[...truncated to fit token limit...]"
+        result.append({"role": m.get("role", "user"), "content": content})
+
+    return result
+
+
 def get_depth_limits(depth_level: str) -> DepthLimits:
     if depth_level in ("quick", "standard", "deep"):
         return DEPTH_CONFIG[depth_level]  # type: ignore[index]
