@@ -10,10 +10,11 @@ Phase 1 is 100% complete across both Backend and Frontend.
 Phase 2 (Writer and Critic loop) is 100% complete across both Backend and Frontend.
 Phase 3 (Goal decomposition and replanning) is in active development:
 - GRAPH-06 (Goal decomposition and replanning): Supervisor dynamically decomposes goals into goal-specific task lists (e.g. script drafting vs. repurposing vs. analytics vs. audience research - AT-08), executes automatic task progression (marking executing node's task DONE), dynamically replans on rejection, respects immutable DONE tasks, normalizes continuous 1..N positions, and synchronizes to SQLite `tasks` table.
+- GRAPH-07 (Skip and repeat logic): Supervisor skips Listener when comment insights are fresh and repeats Research when research is stale or data is thin (AT-05, AT-06); Analyst is skipped in weekly brief when there are no new posts (AT-07); tasks reflect SKIPPED and injected REPEAT actions dynamically.
 
 ## Current task
 
-Phase 3: Goal decomposition and replanning (GRAPH-07: Add skip and repeat logic based on data freshness)
+Phase 3: Goal decomposition and replanning (GRAPH-08: Add depth levels and enforcement of all limits)
 
 ## Key decisions in force
 
