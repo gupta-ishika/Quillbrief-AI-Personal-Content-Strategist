@@ -363,3 +363,105 @@ async def test_supervisor_initializes_tasks_and_persists_to_db(db_session: Sessi
         assert len(db_tasks) == len(updates["task_list"])
         assert all(t.run_id == run.id for t in db_tasks)
         assert db_tasks[0].position == 1
+
+
+def test_at06_stale_research_is_repeated_fresh_research_is_not() -> None:
+    """AT-06 / GRAPH-07: Stale research is repeated. Fresh research is not."""
+    # Case 1: Fresh research results exist along with comment insights
+    state_fresh_research: ContentState = {
+        "comment_insights": [{"theme": "FastAPI"}],
+        "research_results": {"topics": ["AsyncIO", "Pydantic"]},
+        "research_is_stale": False,
+        "current_plan_id": None,
+        "approval_status": "NONE",
+    }
+    eligible_fresh = calculate_eligible_nodes(state_fresh_research)
+    # Research is fresh, so research is skipped and strategist is eligible directly
+    assert eligible_fresh == ["strategist"]
+    assert "research" not in eligible_fresh
+
+    # Case 2: Research results exist but are marked stale
+    state_stale_research: ContentState = {
+        "comment_insights": [{"theme": "FastAPI"}],
+        "research_results": {"topics": ["Old 2024 benchmarks"]},
+        "research_is_stale": True,
+        "current_plan_id": None,
+        "approval_status": "NONE",
+    }
+    eligible_stale = calculate_eligible_nodes(state_stale_research)
+    # Stale research must be repeated
+    assert "research" in eligible_stale
+
+
+def test_at05_thin_data_triggers_research_repeat() -> None:
+    """AT-05 / GRAPH-07: Thin data triggers research repetition to gather evidence."""
+    state_thin_data: ContentState = {
+        "comment_insights": [{"theme": "FastAPI"}],
+        "research_results": {"topics": ["Single item"]},
+        "data_is_thin": True,
+        "current_plan_id": None,
+        "approval_status": "NONE",
+    }
+    eligible = calculate_eligible_nodes(state_thin_data)
+    assert eligible == ["research"]
+
+
+def test_at07_brief_with_no_new_posts_skips_analyst() -> None:
+    """AT-07 / GRAPH-07: Brief with no new posts skips the Analyst."""
+    # Weekly Brief with no new posts
+    state_no_posts: ContentState = {
+        "run_type": "weekly_brief",
+        "has_new_posts": False,
+        "new_posts_count": 0,
+        "comment_insights": [{"theme": "FastAPI"}],
+        "current_plan_id": None,
+        "approval_status": "NONE",
+    }
+    eligible_no_posts = calculate_eligible_nodes(state_no_posts)
+    assert "analyst" not in eligible_no_posts
+
+    # Weekly Brief with new posts available
+    state_with_posts: ContentState = {
+        "run_type": "weekly_brief",
+        "has_new_posts": True,
+        "new_posts_count": 3,
+        "comment_insights": [{"theme": "FastAPI"}],
+        "current_plan_id": None,
+        "approval_status": "NONE",
+    }
+    eligible_with_posts = calculate_eligible_nodes(state_with_posts)
+    assert "analyst" in eligible_with_posts
+
+
+def test_apply_task_updates_skip_and_repeat_transitions() -> None:
+    """Tests task status transitions: skipping fresh listener/analyst, repeating stale research."""
+    initial_tasks = [
+        {"id": "t1", "title": "Analyze comments", "agent": "listener", "position": 1, "status": "TODO"},
+        {"id": "t2", "title": "Research competitors", "agent": "research", "position": 2, "status": "DONE"},
+        {"id": "t3", "title": "Post-mortem analysis", "agent": "analyst", "position": 3, "status": "TODO"},
+    ]
+
+    # State has fresh comments and no new posts, but research is stale
+    state: ContentState = {
+        "comment_insights": [{"theme": "Async"}],
+        "insights_is_stale": False,
+        "research_is_stale": True,
+        "has_new_posts": False,
+    }
+
+    updated = apply_task_updates(initial_tasks, [], state=state)
+
+    # 1. Listener is SKIPPED because comments are already fresh
+    assert updated[0]["agent"] == "listener"
+    assert updated[0]["status"] == "SKIPPED"
+
+    # 2. Analyst is SKIPPED because there are no new posts
+    analyst_task = next(t for t in updated if t["agent"] == "analyst")
+    assert analyst_task["status"] == "SKIPPED"
+
+    # 3. New research task is appended to repeat research because it was stale
+    repeat_research_task = next(
+        t for t in updated if "Repeat research" in t["title"]
+    )
+    assert repeat_research_task is not None
+    assert repeat_research_task["status"] == "TODO"

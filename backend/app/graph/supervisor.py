@@ -16,16 +16,32 @@ logger = logging.getLogger(__name__)
 
 
 def calculate_eligible_nodes(state: ContentState) -> list[NodeName]:
-    """Computes the list of eligible next nodes deterministically in code from state.
+    """Computes the list of eligible next nodes deterministically in code from state (GRAPH-07, PRD AG-7).
 
-    Authoritative eligibility rules (ARCHITECTURE.md Section 3.3 & TEST_PLAN.md UT-01):
-    1. If approval is pending on a plan or draft: only ['approval'] is eligible.
-    2. If a plan was rejected: ['strategist'] is eligible to incorporate creator feedback.
+    Authoritative eligibility rules (ARCHITECTURE.md Section 3.3, TEST_PLAN.md UT-01, AT-01, AT-02, AT-05, AT-06, AT-07):
+    1. If approval is pending on a plan, draft, or depth increase: only ['approval'] is eligible.
+    2. If a plan was rejected: ['strategist'] is eligible to incorporate creator feedback (AT-03).
     3. If plan items are approved and at least one item has no draft: ['writer'] is eligible.
-    4. If no comment insights or audience data exist: ['listener', 'research'] are eligible.
-    5. If fresh comment insights exist but research is missing: ['research', 'strategist'] are eligible.
-    6. If fresh comment insights and research exist, but no plan exists: ['strategist'] is eligible.
-    7. If all tasks are completed and drafts approved: only ['END'] is eligible.
+    4. Post-Mortem / Analyst skip & repeat rules:
+       - For weekly_brief or post_mortem run types:
+         - If no performance_insights exist yet:
+           - If there are no new posts (has_new_posts is False or new_posts_count == 0):
+             Analyst is skipped (AT-07).
+           - Otherwise: 'analyst' is eligible.
+    5. Data freshness & thinness skip & repeat rules:
+       - Listener:
+         - If comment insights exist and are fresh (insights_is_stale is False): listener is skipped.
+         - If comment insights are missing or stale (insights_is_stale is True): listener is eligible.
+       - Research:
+         - If research is stale (research_is_stale is True or research_results.get('is_stale') is True)
+           or data is thin (data_is_thin is True or research_results.get('is_thin') is True):
+           research is repeated and eligible (AT-05, AT-06).
+         - If research exists and is fresh: research is skipped (AT-06).
+       - Strategist:
+         - If fresh comment insights exist (established creator): strategist is eligible directly, skipping research (AT-02).
+         - If research is fresh and robust: strategist is eligible.
+         - If no plan exists and either insights or research exist: strategist is eligible.
+    6. If all tasks are completed and drafts approved: only ['END'] is eligible.
     """
     approval_status = state.get("approval_status", "NONE")
     current_plan_id = state.get("current_plan_id")
@@ -34,37 +50,70 @@ def calculate_eligible_nodes(state: ContentState) -> list[NodeName]:
     research_results = state.get("research_results", {})
     current_draft_id = state.get("current_draft_id")
     task_list = state.get("task_list", [])
+    run_type = state.get("run_type", "goal")
 
     # Rule 1: Approval waiting
     if approval_status == "PENDING":
         return ["approval"]
 
-    # Rule 2: Plan rejected with feedback
+    # Rule 2: Plan rejected with feedback (AT-03)
     if approval_status == "REJECTED":
         return ["strategist"]
 
     # Rule 3: Approved plan exists; check if an item needs drafting
     if approval_status == "APPROVED" and content_plan:
-        # Check if there are plan items without drafts
         if not current_draft_id:
             return ["writer"]
-        # If all tasks marked DONE
         if task_list and all(t.get("status") in ("DONE", "SKIPPED") for t in task_list):
             return ["END"]
 
-    # Rule 4: No comment insights or research exists yet
-    if not comment_insights and not research_results:
-        return ["listener", "research"]
+    # Rule 4: Post-Mortem / Weekly Brief Analyst skip logic (AT-07)
+    if run_type in ("weekly_brief", "post_mortem") and not state.get("performance_insights"):
+        has_new_posts = state.get("has_new_posts")
+        new_posts_count = state.get("new_posts_count")
+        if has_new_posts is False or new_posts_count == 0:
+            # Skip analyst when there are no new posts (AT-07)
+            pass
+        elif has_new_posts is True or (new_posts_count is not None and new_posts_count > 0):
+            return ["analyst"]
 
-    # Rule 5: Insights exist but no research
-    if comment_insights and not research_results and not current_plan_id:
-        return ["research", "strategist"]
+    # Rule 5: Freshness & Thinness checks (AT-01, AT-02, AT-05, AT-06)
+    has_insights = bool(comment_insights)
+    insights_stale = state.get("insights_is_stale", False)
+    insights_fresh = has_insights and not insights_stale
 
-    # Rule 6: Both insights and research exist, but no content plan yet
-    if (comment_insights or research_results) and not current_plan_id:
+    has_research = bool(research_results)
+    research_stale = state.get("research_is_stale", False) or research_results.get("is_stale", False)
+    data_thin = state.get("data_is_thin", False) or research_results.get("is_thin", False)
+    research_fresh = has_research and not research_stale and not data_thin
+
+    # If research is stale or thin: research must be repeated (AT-05, AT-06)
+    if (has_research and (research_stale or data_thin)) or (has_insights and data_thin):
+        if not insights_fresh:
+            return ["listener", "research"]
+        return ["research"]
+
+    # If both insights and research are fresh, and no plan yet: route directly to strategist (skipping listener and research)
+    if insights_fresh and research_fresh and not current_plan_id:
         return ["strategist"]
 
-    # Rule 7: Finished all tasks
+    # If insights are fresh, but no research: established creator can route directly to strategist or research (AT-02)
+    if insights_fresh and not has_research and not current_plan_id:
+        return ["research", "strategist"]
+
+    # If neither insights nor research exists yet: new creator must gather data (AT-01)
+    if not has_insights and not has_research:
+        return ["listener", "research"]
+
+    # If research is fresh but no insights: listener and strategist are eligible
+    if not has_insights and research_fresh and not current_plan_id:
+        return ["listener", "strategist"]
+
+    # If insights exist and research is not stale, but no content plan yet
+    if (has_insights or has_research) and not current_plan_id:
+        return ["strategist"]
+
+    # Rule 6: Finished all tasks
     if task_list and all(t.get("status") in ("DONE", "SKIPPED") for t in task_list):
         return ["END"]
 
@@ -340,10 +389,12 @@ def apply_task_updates(
     task_updates: list[dict[str, Any]],
     from_node: str | None = None,
     approval_status: str = "NONE",
+    state: ContentState | None = None,
 ) -> list[TaskDict]:
-    """Applies task list modifications (add, update, remove, reorder) and dynamic status transitions (GRAPH-06).
+    """Applies task list modifications (add, update, remove, reorder) and dynamic status transitions (GRAPH-06, GRAPH-07).
 
     Ensures sequential positions 1..N and respects the rule that a resumed run never repeats or deletes a DONE task.
+    Supports skip and repeat logic based on data freshness and thinness (PRD AG-7).
     """
     tasks = [dict(t) for t in current_tasks]
 
@@ -355,7 +406,7 @@ def apply_task_updates(
                 t["status"] = "DONE"
                 break
 
-    # 2. Dynamic replanning if plan was rejected
+    # 2. Dynamic replanning if plan was rejected (AT-03)
     if approval_status == "REJECTED":
         has_revision_task = any(
             t.get("agent") == "strategist" and t.get("status") == "TODO" for t in tasks
@@ -368,6 +419,56 @@ def apply_task_updates(
                 "position": len(tasks) + 1,
                 "status": "TODO",
             })
+
+    # 3. Skip and repeat logic based on data freshness & thinness (GRAPH-07, PRD AG-7, AT-05, AT-06, AT-07)
+    if state:
+        comment_insights = state.get("comment_insights", [])
+        research_results = state.get("research_results", {})
+        insights_fresh = bool(comment_insights) and not state.get("insights_is_stale", False)
+        research_stale = state.get("research_is_stale", False) or research_results.get("is_stale", False)
+        data_thin = state.get("data_is_thin", False) or research_results.get("is_thin", False)
+        has_new_posts = state.get("has_new_posts")
+        new_posts_count = state.get("new_posts_count")
+
+        # Skip listener if comments are already fresh
+        if insights_fresh:
+            for t in tasks:
+                if t.get("agent") == "listener" and t.get("status") == "TODO":
+                    t["status"] = "SKIPPED"
+
+        # Skip analyst if there are no new posts (AT-07)
+        if has_new_posts is False or new_posts_count == 0:
+            for t in tasks:
+                if t.get("agent") == "analyst" and t.get("status") == "TODO":
+                    t["status"] = "SKIPPED"
+
+        # Repeat research if research is stale or data is thin (AT-05, AT-06)
+        if (research_stale or data_thin) and (research_results or comment_insights):
+            has_todo_research = any(
+                t.get("agent") == "research" and t.get("status") == "TODO" for t in tasks
+            )
+            if not has_todo_research:
+                tasks.append({
+                    "id": f"task_{len(tasks) + 1}",
+                    "title": "Repeat research: data is stale or thin",
+                    "agent": "research",
+                    "position": len(tasks) + 1,
+                    "status": "TODO",
+                })
+
+        # Repeat listener if insights are explicitly marked stale
+        if state.get("insights_is_stale", False) and comment_insights:
+            has_todo_listener = any(
+                t.get("agent") == "listener" and t.get("status") == "TODO" for t in tasks
+            )
+            if not has_todo_listener:
+                tasks.append({
+                    "id": f"task_{len(tasks) + 1}",
+                    "title": "Refresh audience comments: insights are stale",
+                    "agent": "listener",
+                    "position": len(tasks) + 1,
+                    "status": "TODO",
+                })
 
     # 3. Apply model-directed task updates (add, update, remove, reorder)
     for update in task_updates:
@@ -612,6 +713,7 @@ async def supervisor_node(
         task_updates=task_updates,
         from_node=from_node,
         approval_status=approval_status,
+        state=state,
     )
 
     # 3. Synchronize task list to database if session and run_id available

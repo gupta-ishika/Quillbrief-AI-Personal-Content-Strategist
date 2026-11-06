@@ -12,6 +12,7 @@ class TaskDict(TypedDict, total=False):
 class ContentState(TypedDict, total=False):
     # Core identifiers and inputs
     run_id: str
+    run_type: Literal["goal", "weekly_brief", "post_mortem"]
     user_goal: str
     depth_level: Literal["quick", "standard", "deep"]
     task_list: list[TaskDict]
@@ -21,6 +22,11 @@ class ContentState(TypedDict, total=False):
     comment_insights: list[dict[str, Any]]
     research_results: dict[str, Any]
     creator_context: dict[str, Any]
+    insights_is_stale: bool
+    research_is_stale: bool
+    data_is_thin: bool
+    has_new_posts: bool
+    new_posts_count: int
 
     # Plan state
     content_plan: list[dict[str, Any]]
