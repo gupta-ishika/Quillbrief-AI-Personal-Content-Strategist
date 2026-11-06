@@ -77,10 +77,10 @@ Goal: controlled iteration that improves draft quality.
 - [x] AGT-04 Build the Writer agent for scripts, titles, descriptions and posts
 - [x] TOOL-05 Build the draft checker
 - [x] AGT-05 Build the Critic with rubric scoring, structured feedback and the review limit
-- [ ] GRAPH-05 Add the Writer to Critic loop and best-draft selection
-- [ ] DB-03 Add drafts (with lineage, versions and posted reference) and critic_evaluations
-- [ ] VER-02 Draft versioning: every edit or revision creates a version, approval ties to the exact version, editing approved content invalidates the approval, creator edits run the deterministic checks only, mark-as-posted records the approved version
-- [ ] API-03 Implement plans and drafts endpoints, including edit, versions, mark-posted and stale-version errors
+- [x] GRAPH-05 Add the Writer to Critic loop and best-draft selection
+- [x] DB-03 Add drafts (with lineage, versions and posted reference) and critic_evaluations
+- [x] VER-02 Draft versioning: every edit or revision creates a version, approval ties to the exact version, editing approved content invalidates the approval, creator edits run the deterministic checks only, mark-as-posted records the approved version
+- [x] API-03 Implement plans and drafts endpoints, including edit, versions, mark-posted and stale-version errors
 - [ ] UI-04 Build the Draft review screen with the Critic panel
 - [ ] UI-05 Add the Copy and Mark as posted actions
 - [ ] TEST-02 Test the revision loop, the retry limit, the exhausted-limit banner, editing before and after approval, and marking an unapproved or outdated version as posted

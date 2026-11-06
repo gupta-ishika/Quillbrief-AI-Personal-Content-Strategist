@@ -11,10 +11,13 @@ Phase 2 (Writer and Critic loop) is in active development:
 - AGT-04 (Writer Agent): Supports scripts, titles, descriptions, captions, and posts with 4,000 token limit, untrusted-data boundary directives, declared-only creator profile, versioned lineage persistence, and deterministic fallbacks.
 - TOOL-05 (Draft Checker): Deterministic quality checks for word/character counts, platform length limits, and required sections (Hook, Body, CTA) using zero LLM tokens.
 - AGT-05 (Critic Agent): 5-dimension rubric scoring (Hook, Tone, Accuracy, Length, Relevance), deterministic check enforcement (blocking passing if deterministic checks fail), review limits by depth (Quick 2, Standard 3, Deep 3), best-draft selection in lineage when reviews are exhausted, and persistent evaluation records.
+- GRAPH-05 (Writer-Critic Loop & Graph Routing): Connected Writer and Critic in LangGraph with conditional routing (`writer -> critic -> writer | approval`), routing from supervisor to writer, and best-draft fallback on review exhaustion.
+- DB-03 (Drafts & Critic Evaluations): SQLite models, migrations, constraints, and cascade deletion.
+- VER-02 & API-03 (Draft Versioning & REST Endpoints): Draft versioning, exact-version approvals, optimistic locking (STALE_VERSION), deterministic checks on creator edits (CHECKS_FAILED), mark-as-posted tracking (NOT_APPROVED / STALE_VERSION), and post-link attachment (LINK_REQUIRED).
 
 ## Current task
 
-Phase 2: Writer and Critic loop (GRAPH-05: Add the Writer to Critic loop and best-draft selection)
+Phase 2: Writer and Critic loop (UI-04: Build Draft review screen with the Critic panel; UI-05: Add Copy and Mark as posted actions)
 
 ## Key decisions in force
 
@@ -57,6 +60,11 @@ Phase 2: Writer and Critic loop (GRAPH-05: Add the Writer to Critic loop and bes
 
 ## Update log
 
+- GRAPH-05, DB-03, VER-02, API-03 done (2026-11-06): Completed backend engine, database, and API layer for Writer-Critic loop and draft versioning:
+  - Graph routing (`backend/app/graph/builder.py`): writer and critic nodes integrated with cyclic revision edge, review-count limit check, best-draft fallback, and interrupt-based human approval step.
+  - Draft & Critic evaluation models (`backend/app/db/models.py`, `backend/alembic/versions/`): draft lineage tracking, immutable versions, check constraints, cascade deletions.
+  - Draft REST API (`backend/app/api/v1/drafts.py`): `GET /drafts`, `GET /drafts/{id}`, `GET /drafts/{id}/versions`, `POST /drafts/{id}/edit` with 422 CHECKS_FAILED & 409 STALE_VERSION, `POST /drafts/{id}/mark-posted` with 409 NOT_APPROVED & 409 STALE_VERSION, and `POST /drafts/{id}/link-posted` with 409 NOT_POSTED & 422 LINK_REQUIRED.
+  - Comprehensive unit and integration test suites passing (31 test files, 100% pass rate).
 - AGT-04, TOOL-05, AGT-05 done (2026-11-03): Implemented the Writer agent, deterministic Draft Checker, and Critic agent for Phase 2:
   - Writer agent (`app/agents/writer.py`) producing structured drafts for scripts, titles, descriptions, captions, and posts adhering to 4,000 token limit, declared-only creator profile, untrusted data boundary directives, and immutable draft versioning.
   - Draft checker (`app/tools/draft_checker.py`) enforcing word count, character count, format-required sections (Hook, Body, CTA), and platform length limits for YouTube, Instagram, LinkedIn, and X with zero LLM token consumption.
