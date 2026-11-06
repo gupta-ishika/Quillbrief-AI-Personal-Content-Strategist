@@ -6,12 +6,14 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from app.db.base import Base
 from app.db.models import RoutingLog
+from app.db.repositories.runs import create_run, get_run_tasks
 from app.graph import (
     ContentState,
     calculate_eligible_nodes,
     get_deterministic_default_node,
     supervisor_node,
 )
+from app.graph.supervisor import apply_task_updates, decompose_goal_to_tasks
 
 
 @pytest.fixture
@@ -247,3 +249,117 @@ async def test_ut05_repeat_detection_cycle(db_session: Session) -> None:
     assert updates["stop_reason"] == "repeat_detected"
     assert updates["degraded"] is True
     assert "ping-pong" in updates["degraded_reason"]
+
+
+def test_at08_different_goals_produce_different_task_lists() -> None:
+    """AT-08: Two different goals on the same creator produce different task lists."""
+    # Goal 1: Script drafting focus
+    goal_script = "Write a video script about FastAPI Middleware with benchmarks"
+    tasks_script = decompose_goal_to_tasks(goal_script, depth_level="standard")
+
+    # Goal 2: Repurposing focus
+    goal_repurpose = "Repurpose my latest video into a LinkedIn post and X thread"
+    tasks_repurpose = decompose_goal_to_tasks(goal_repurpose, depth_level="standard")
+
+    # Goal 3: Performance analysis focus
+    goal_analytics = "Analyze performance metrics and audience retention of recent uploads"
+    tasks_analytics = decompose_goal_to_tasks(goal_analytics, depth_level="standard")
+
+    # Verify task lists are distinct
+    agents_script = [t["agent"] for t in tasks_script]
+    agents_repurpose = [t["agent"] for t in tasks_repurpose]
+    agents_analytics = [t["agent"] for t in tasks_analytics]
+
+    assert agents_script != agents_repurpose
+    assert agents_script != agents_analytics
+    assert agents_repurpose != agents_analytics
+
+    # Script drafting includes writer and critic
+    assert "writer" in agents_script
+    assert "critic" in agents_script
+
+    # Analytics focuses on analyst and strategist
+    assert "analyst" in agents_analytics
+    assert "writer" not in agents_analytics
+
+    # Verify positions are sequential 1..N
+    for task_list in (tasks_script, tasks_repurpose, tasks_analytics):
+        positions = [t["position"] for t in task_list]
+        assert positions == list(range(1, len(task_list) + 1))
+
+
+def test_apply_task_updates_progression_and_replanning() -> None:
+    """Tests automatic task completion, dynamic replanning on rejection, and update actions."""
+    initial_tasks = [
+        {"id": "t1", "title": "Listen to comments", "agent": "listener", "position": 1, "status": "TODO"},
+        {"id": "t2", "title": "Research competitors", "agent": "research", "position": 2, "status": "TODO"},
+        {"id": "t3", "title": "Create plan", "agent": "strategist", "position": 3, "status": "TODO"},
+    ]
+
+    # 1. Returning from listener marks t1 as DONE
+    step1_tasks = apply_task_updates(initial_tasks, [], from_node="listener")
+    assert step1_tasks[0]["status"] == "DONE"
+    assert step1_tasks[1]["status"] == "TODO"
+
+    # 2. Returning from strategist marks t3 as DONE
+    step2_tasks = apply_task_updates(step1_tasks, [], from_node="strategist")
+    assert step2_tasks[2]["status"] == "DONE"
+
+    # 3. Resumed run never repeats or deletes a DONE task
+    # Attempting to remove t1 should be ignored
+    step3_tasks = apply_task_updates(step2_tasks, [{"action": "remove", "task_id": "t1"}])
+    assert any(t["id"] == "t1" and t["status"] == "DONE" for t in step3_tasks)
+
+    # 4. Dynamic replanning when plan is rejected
+    step4_tasks = apply_task_updates(step3_tasks, [], from_node="approval", approval_status="REJECTED")
+    revision_task = next(
+        (t for t in step4_tasks if "Revise content plan" in t["title"]), None
+    )
+    assert revision_task is not None
+    assert revision_task["agent"] == "strategist"
+    assert revision_task["status"] == "TODO"
+
+    # 5. Reordering tasks preserves normalized sequential positions
+    reordered = apply_task_updates(
+        step4_tasks,
+        [{"action": "reorder", "task_id": "t2", "position": 10}],
+    )
+    positions = [t["position"] for t in reordered]
+    assert positions == list(range(1, len(reordered) + 1))
+
+
+@pytest.mark.asyncio
+async def test_supervisor_initializes_tasks_and_persists_to_db(db_session: Session) -> None:
+    """Verifies that an uninitialized run decomposes goal and persists tasks in SQLite."""
+    run = create_run(db_session, run_type="goal", depth_level="standard")
+    state: ContentState = {
+        "run_id": run.id,
+        "user_goal": "Write a script tutorial on Python asyncio",
+        "depth_level": "standard",
+        "task_list": [],
+        "execution_steps": 0,
+        "comment_insights": [],
+        "research_results": {},
+        "current_plan_id": None,
+        "approval_status": "NONE",
+    }
+    mock_response = {
+        "message": {
+            "content": '{"next_node": "research", "reason": "Research background first", "task_updates": []}'
+        },
+        "prompt_eval_count": 100,
+        "eval_count": 20,
+    }
+
+    with patch(
+        "app.graph.supervisor.request_supervisor_llm",
+        new=AsyncMock(return_value=(mock_response, 0.1)),
+    ):
+        updates = await supervisor_node(state, db_session=db_session)
+        assert len(updates["task_list"]) > 0
+
+        # Verify persisted in database
+        db_tasks = get_run_tasks(db_session, run.id)
+        assert len(db_tasks) == len(updates["task_list"])
+        assert all(t.run_id == run.id for t in db_tasks)
+        assert db_tasks[0].position == 1

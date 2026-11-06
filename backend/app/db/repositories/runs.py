@@ -89,6 +89,60 @@ def get_run_tasks(db: Session, run_id: str) -> list[Task]:
     return db.query(Task).filter_by(run_id=run_id).order_by(Task.position.asc()).all()
 
 
+def sync_run_tasks(
+    db: Session,
+    run_id: str,
+    tasks_data: list[Any],
+) -> list[Task]:
+    """Synchronizes the supervisor's task list to the tasks table (GRAPH-06, DATABASE.md 3.3).
+
+    Handles adding new tasks, updating status/title/agent, deleting removed tasks (unless DONE),
+    and rewriting position numbers so they remain sequential 1..N.
+    """
+    existing_tasks = {t.id: t for t in db.query(Task).filter_by(run_id=run_id).all()}
+    retained_ids: set[str] = set()
+    result_tasks: list[Task] = []
+
+    for idx, t_dict in enumerate(tasks_data, start=1):
+        task_id = t_dict.get("id")
+        title = str(t_dict.get("title") or f"Task {idx}")
+        agent = str(t_dict.get("agent") or "supervisor")
+        status = str(t_dict.get("status") or "TODO").upper()
+        if status not in ("TODO", "DONE", "SKIPPED", "FAILED"):
+            status = "TODO"
+
+        if task_id and task_id in existing_tasks:
+            task_obj = existing_tasks[task_id]
+            task_obj.title = title
+            task_obj.agent = agent
+            task_obj.position = idx
+            task_obj.status = status
+            task_obj.updated_at = utc_now()
+            retained_ids.add(task_id)
+            result_tasks.append(task_obj)
+        else:
+            new_task = Task(
+                run_id=run_id,
+                title=title,
+                agent=agent,
+                position=idx,
+                status=status,
+            )
+            db.add(new_task)
+            result_tasks.append(new_task)
+
+    # Delete unreferenced tasks that are not DONE
+    for old_id, old_task in existing_tasks.items():
+        if old_id not in retained_ids and old_task.status != "DONE":
+            db.delete(old_task)
+
+    db.commit()
+    for t in result_tasks:
+        db.refresh(t)
+
+    return result_tasks
+
+
 def create_routing_log(
     db: Session,
     run_id: str,

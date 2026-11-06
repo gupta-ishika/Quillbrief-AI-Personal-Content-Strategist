@@ -7,20 +7,13 @@ Update this file after every task. DECISIONS.md holds permanent decisions. This 
 ## Current status
 
 Phase 1 is 100% complete across both Backend and Frontend.
-Phase 2 (Writer and Critic loop) is 100% complete across both Backend and Frontend:
-- AGT-04 (Writer Agent): Supports scripts, titles, descriptions, captions, and posts with 4,000 token limit, untrusted-data boundary directives, declared-only creator profile, versioned lineage persistence, and deterministic fallbacks.
-- TOOL-05 (Draft Checker): Deterministic quality checks for word/character counts, platform length limits, and required sections (Hook, Body, CTA) using zero LLM tokens.
-- AGT-05 (Critic Agent): 5-dimension rubric scoring (Hook, Tone, Accuracy, Length, Relevance), deterministic check enforcement (blocking passing if deterministic checks fail), review limits by depth (Quick 2, Standard 3, Deep 3), best-draft selection in lineage when reviews are exhausted, and persistent evaluation records.
-- GRAPH-05 (Writer-Critic Loop & Graph Routing): Connected Writer and Critic in LangGraph with conditional routing (`writer -> critic -> writer | approval`), routing from supervisor to writer, and best-draft fallback on review exhaustion.
-- DB-03 (Drafts & Critic Evaluations): SQLite models, migrations, constraints, and cascade deletion.
-- VER-02 & API-03 (Draft Versioning & REST Endpoints): Draft versioning, exact-version approvals, optimistic locking (STALE_VERSION), deterministic checks on creator edits (CHECKS_FAILED), mark-as-posted tracking (NOT_APPROVED / STALE_VERSION), and post-link attachment (LINK_REQUIRED).
-- UI-04 (Draft Review Screen with Critic Panel): Full Draft review interface matching DESIGN 4.4, with live character/word count, platform limits, deterministic checks, inline editing, Critic evaluation panel (rubric dimensions, score, review progress, exhausted review limit banner, feedback items).
-- UI-05 (Copy & Mark as Posted Actions): One-click clipboard copy with visual feedback, mark as posted modal (optional URL or platform ID), unlinked posted draft badge ("Posted (no link)") with warning note and "Add link" dialog.
-- TEST-02: Comprehensive integration and unit test coverage in `DraftReview.test.tsx` verifying revision loops, retry limits, exhausted-limit banner, editing before/after approval, stale version warnings, and posted draft flows.
+Phase 2 (Writer and Critic loop) is 100% complete across both Backend and Frontend.
+Phase 3 (Goal decomposition and replanning) is in active development:
+- GRAPH-06 (Goal decomposition and replanning): Supervisor dynamically decomposes goals into goal-specific task lists (e.g. script drafting vs. repurposing vs. analytics vs. audience research - AT-08), executes automatic task progression (marking executing node's task DONE), dynamically replans on rejection, respects immutable DONE tasks, normalizes continuous 1..N positions, and synchronizes to SQLite `tasks` table.
 
 ## Current task
 
-Phase 3: Goal decomposition and replanning (GRAPH-06: Add task list creation and replanning to the Supervisor)
+Phase 3: Goal decomposition and replanning (GRAPH-07: Add skip and repeat logic based on data freshness)
 
 ## Key decisions in force
 
@@ -63,6 +56,11 @@ Phase 3: Goal decomposition and replanning (GRAPH-06: Add task list creation and
 
 ## Update log
 
+- GRAPH-06 done (2026-11-06): Implemented task list creation and dynamic replanning in Supervisor:
+  - Goal decomposition (`decompose_goal_to_tasks`): Analyzes `user_goal` to generate goal-tailored task lists across 5 distinct categories (script drafting, content repurposing, performance analytics, research discovery, comprehensive planning), satisfying AT-08 ("two different goals produce different task lists").
+  - Dynamic replanning (`apply_task_updates`): Supports adding, updating, removing, and reordering tasks; automatically transitions executing agent's task to DONE; dynamically injects revision task on rejected plan; guarantees that a resumed run never repeats or deletes a DONE task; normalizes sequential positions 1..N.
+  - SQLite persistence (`sync_run_tasks`): Synchronizes state task list with database `tasks` table, mapping generated UUIDs.
+  - Verified with 11 supervisor unit tests, 200 total backend tests, 0 Ruff errors, and 0 Mypy type discrepancies.
 - UI-04, UI-05, TEST-02 done (2026-11-06): Completed frontend Draft Review screen, Critic evaluation panel, Drafts Library, and end-to-end integration test suite:
   - Draft Review screen (`DraftReview.tsx`): Displays formatted draft content, live word and character counters, platform limit status (YouTube Title, Description, Community Post, Instagram Caption, LinkedIn Post, X Thread), section indicators (Hook, Body, CTA), and immutable version switcher with approval warning notice.
   - Critic panel: 5-dimension rubric breakdown (Hook, Tone, Accuracy, Length, Relevance) with scores and visual bars, review iteration tracker ("Review X of 3"), review limit exhausted alert banner with open issues notice, and itemized strengths, suggestions, and issues.

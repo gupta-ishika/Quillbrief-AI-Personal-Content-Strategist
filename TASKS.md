@@ -91,7 +91,7 @@ Goal: controlled iteration that improves draft quality.
 
 Goal: different goals and starting states produce different routes without hardcoded workflows.
 
-- [ ] GRAPH-06 Add task list creation and replanning to the Supervisor
+- [x] GRAPH-06 Add task list creation and replanning to the Supervisor
 - [ ] GRAPH-07 Add skip and repeat logic based on data freshness
 - [ ] GRAPH-08 Add depth levels and enforcement of all limits
 - [ ] GRAPH-09 Add the depth increase proposal and its approval

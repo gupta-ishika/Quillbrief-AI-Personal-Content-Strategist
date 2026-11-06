@@ -1,13 +1,13 @@
 import json
 import logging
 import time
-from typing import Any
+from typing import Any, Literal, cast
 
 import httpx
 from sqlalchemy.orm import Session
 
 from app.config import settings
-from app.db.repositories.runs import create_routing_log
+from app.db.repositories.runs import create_routing_log, sync_run_tasks
 from app.graph.budgets import detect_routing_repeat, is_step_budget_exceeded
 from app.graph.decisions import NodeName, SupervisorDecision
 from app.graph.state import ContentState, TaskDict
@@ -127,6 +127,289 @@ async def request_supervisor_llm(
         resp = await default_client.post(url, json=payload)
         resp.raise_for_status()
         return resp.json(), time.perf_counter() - start
+
+
+def decompose_goal_to_tasks(
+    user_goal: str,
+    depth_level: str = "standard",
+    creator_profile: dict[str, Any] | None = None,
+) -> list[TaskDict]:
+    """Decomposes the creator's goal into an initial structured task list (GRAPH-06, PRD AG-2, AT-08).
+
+    Different goals produce distinctly different task lists without hardcoded static workflows.
+    """
+    goal_lower = (user_goal or "").lower()
+    tasks: list[TaskDict] = []
+
+    # Goal Type 1: Content Repurposing focus
+    if any(k in goal_lower for k in ("repurpose", "thread", "linkedin", "caption", "short")):
+        tasks = [
+            {
+                "id": "task_1",
+                "title": "Analyze and extract key highlights from source content",
+                "agent": "repurposer",
+                "position": 1,
+                "status": "TODO",
+            },
+            {
+                "id": "task_2",
+                "title": "Draft repurposed post and multi-format adaptations",
+                "agent": "repurposer",
+                "position": 2,
+                "status": "TODO",
+            },
+            {
+                "id": "task_3",
+                "title": "Creator review of repurposed content",
+                "agent": "approval",
+                "position": 3,
+                "status": "TODO",
+            },
+        ]
+    # Goal Type 2: Script / Drafting focus
+    elif any(k in goal_lower for k in ("script", "draft", "write", "video tutorial", "record")):
+        tasks = [
+            {
+                "id": "task_1",
+                "title": f"Investigate background and competitor videos for '{user_goal[:50]}'",
+                "agent": "research",
+                "position": 1,
+                "status": "TODO",
+            },
+            {
+                "id": "task_2",
+                "title": "Structure content outline and strategic rationale",
+                "agent": "strategist",
+                "position": 2,
+                "status": "TODO",
+            },
+            {
+                "id": "task_3",
+                "title": "Creator review of outline",
+                "agent": "approval",
+                "position": 3,
+                "status": "TODO",
+            },
+            {
+                "id": "task_4",
+                "title": "Draft complete video script",
+                "agent": "writer",
+                "position": 4,
+                "status": "TODO",
+            },
+            {
+                "id": "task_5",
+                "title": "Critic rubric evaluation and quality check",
+                "agent": "critic",
+                "position": 5,
+                "status": "TODO",
+            },
+            {
+                "id": "task_6",
+                "title": "Creator review of video script",
+                "agent": "approval",
+                "position": 6,
+                "status": "TODO",
+            },
+        ]
+    # Goal Type C: Analytics & Post-Mortem focus
+    elif any(
+        k in goal_lower for k in ("analytics", "post-mortem", "metrics", "retention", "performance")
+    ):
+        tasks = [
+            {
+                "id": "task_1",
+                "title": "Analyze recent video performance and viewer retention",
+                "agent": "analyst",
+                "position": 1,
+                "status": "TODO",
+            },
+            {
+                "id": "task_2",
+                "title": "Synthesize strategic recommendations and future moves",
+                "agent": "strategist",
+                "position": 2,
+                "status": "TODO",
+            },
+            {
+                "id": "task_3",
+                "title": "Review strategic direction",
+                "agent": "approval",
+                "position": 3,
+                "status": "TODO",
+            },
+        ]
+    # Goal Type D: Research & Trends focus
+    elif any(k in goal_lower for k in ("research", "competitor", "trending", "explore", "discover")):
+        tasks = [
+            {
+                "id": "task_1",
+                "title": "Extract comments and community themes",
+                "agent": "listener",
+                "position": 1,
+                "status": "TODO",
+            },
+            {
+                "id": "task_2",
+                "title": "Survey similar creator videos and niche benchmarks",
+                "agent": "research",
+                "position": 2,
+                "status": "TODO",
+            },
+            {
+                "id": "task_3",
+                "title": "Formulate targeted content recommendations",
+                "agent": "strategist",
+                "position": 3,
+                "status": "TODO",
+            },
+            {
+                "id": "task_4",
+                "title": "Review research-backed content proposals",
+                "agent": "approval",
+                "position": 4,
+                "status": "TODO",
+            },
+        ]
+    # Goal Type E: Comprehensive / Audience Planning (Default)
+    else:
+        tasks = [
+            {
+                "id": "task_1",
+                "title": "Analyze audience comments and friction points",
+                "agent": "listener",
+                "position": 1,
+                "status": "TODO",
+            },
+            {
+                "id": "task_2",
+                "title": "Research trending topics and comparable creators",
+                "agent": "research",
+                "position": 2,
+                "status": "TODO",
+            },
+            {
+                "id": "task_3",
+                "title": "Generate comprehensive content plan",
+                "agent": "strategist",
+                "position": 3,
+                "status": "TODO",
+            },
+            {
+                "id": "task_4",
+                "title": "Review proposed content plan",
+                "agent": "approval",
+                "position": 3,
+                "status": "TODO",
+            },
+            {
+                "id": "task_5",
+                "title": "Draft prioritized content items",
+                "agent": "writer",
+                "position": 5,
+                "status": "TODO",
+            },
+            {
+                "id": "task_6",
+                "title": "Critic rubric evaluation",
+                "agent": "critic",
+                "position": 6,
+                "status": "TODO",
+            },
+            {
+                "id": "task_7",
+                "title": "Creator review of finished draft",
+                "agent": "approval",
+                "position": 7,
+                "status": "TODO",
+            },
+        ]
+
+    # Quick depth streamlines tasks
+    if depth_level == "quick":
+        tasks = [t for t in tasks if t["agent"] in ("research", "strategist", "writer", "approval")]
+
+    for idx, t in enumerate(tasks, start=1):
+        t["position"] = idx
+
+    return tasks
+
+
+def apply_task_updates(
+    current_tasks: list[TaskDict],
+    task_updates: list[dict[str, Any]],
+    from_node: str | None = None,
+    approval_status: str = "NONE",
+) -> list[TaskDict]:
+    """Applies task list modifications (add, update, remove, reorder) and dynamic status transitions (GRAPH-06).
+
+    Ensures sequential positions 1..N and respects the rule that a resumed run never repeats or deletes a DONE task.
+    """
+    tasks = [dict(t) for t in current_tasks]
+
+    # 1. Automatic task completion progression:
+    # If control just returned from an agent node, mark that agent's first TODO task as DONE
+    if from_node and from_node not in ("supervisor", "START", "END"):
+        for t in tasks:
+            if t.get("agent") == from_node and t.get("status") == "TODO":
+                t["status"] = "DONE"
+                break
+
+    # 2. Dynamic replanning if plan was rejected
+    if approval_status == "REJECTED":
+        has_revision_task = any(
+            t.get("agent") == "strategist" and t.get("status") == "TODO" for t in tasks
+        )
+        if not has_revision_task:
+            tasks.append({
+                "id": f"task_{len(tasks) + 1}",
+                "title": "Revise content plan incorporating creator feedback",
+                "agent": "strategist",
+                "position": len(tasks) + 1,
+                "status": "TODO",
+            })
+
+    # 3. Apply model-directed task updates (add, update, remove, reorder)
+    for update in task_updates:
+        action = update.get("action")
+        task_id = update.get("task_id")
+
+        if action == "add":
+            tasks.append({
+                "id": f"task_{len(tasks) + 1}",
+                "title": str(update.get("title") or "New Task"),
+                "agent": str(update.get("agent") or "supervisor"),
+                "position": int(update.get("position") or (len(tasks) + 1)),
+                "status": "TODO",
+            })
+        elif action == "update" and task_id:
+            for t in tasks:
+                if t.get("id") == task_id:
+                    if update.get("status"):
+                        t["status"] = update["status"]
+                    if update.get("title"):
+                        t["title"] = update["title"]
+                    if update.get("agent"):
+                        t["agent"] = update["agent"]
+                    if update.get("position"):
+                        t["position"] = int(update["position"])
+        elif action == "remove" and task_id:
+            # Resumed run never deletes a DONE task (DATABASE.md 3.3)
+            tasks = [t for t in tasks if not (t.get("id") == task_id and t.get("status") != "DONE")]
+        elif action == "reorder":
+            if task_id and update.get("position") is not None:
+                for t in tasks:
+                    if t.get("id") == task_id:
+                        t["position"] = int(update["position"])
+
+    # 4. Normalize sequential positions 1..N
+    tasks.sort(key=lambda t: (int(str(t.get("position") or 0)), str(t.get("id") or "")))
+    normalized: list[TaskDict] = []
+    for idx, t in enumerate(tasks, start=1):
+        t["position"] = idx
+        normalized.append(cast(TaskDict, t))
+
+    return normalized
 
 
 def build_supervisor_prompt(
@@ -314,27 +597,39 @@ async def supervisor_node(
 
     final_chosen_node: str = chosen_node or "END"
 
-    # Update task list if task updates present
+    # 1. Goal decomposition: initialize task list if empty and model did not supply updates (GRAPH-06, PRD AG-2, AT-08)
     current_tasks: list[TaskDict] = list(state.get("task_list", []))
-    for update in task_updates:
-        action = update.get("action")
-        if action == "add":
-            current_tasks.append(
-                {
-                    "id": f"task_{len(current_tasks) + 1}",
-                    "title": str(update.get("title") or "New Task"),
-                    "agent": str(update.get("agent") or final_chosen_node),
-                    "position": int(update.get("position") or (len(current_tasks) + 1)),
-                    "status": "TODO",
-                }
-            )
-        elif action == "update" and update.get("task_id"):
-            for t in current_tasks:
-                if t.get("id") == update["task_id"]:
-                    if update.get("status"):
-                        t["status"] = update["status"]
-                    if update.get("title"):
-                        t["title"] = update["title"]
+    if not current_tasks and not task_updates:
+        user_goal = state.get("user_goal", "")
+        depth_level = state.get("depth_level", "standard")
+        profile = state.get("creator_profile", {})
+        current_tasks = decompose_goal_to_tasks(user_goal, depth_level, profile)
+
+    # 2. Dynamic replanning and automatic step completion (GRAPH-06)
+    approval_status = state.get("approval_status", "NONE")
+    current_tasks = apply_task_updates(
+        current_tasks=current_tasks,
+        task_updates=task_updates,
+        from_node=from_node,
+        approval_status=approval_status,
+    )
+
+    # 3. Synchronize task list to database if session and run_id available
+    if db_session and run_id:
+        try:
+            persisted_tasks = sync_run_tasks(db=db_session, run_id=run_id, tasks_data=current_tasks)
+            current_tasks = [
+                TaskDict(
+                    id=pt.id,
+                    title=pt.title,
+                    agent=pt.agent,
+                    position=pt.position,
+                    status=cast(Literal["TODO", "DONE", "SKIPPED", "FAILED"], pt.status),
+                )
+                for pt in persisted_tasks
+            ]
+        except Exception as e:
+            logger.warning("Failed to sync run tasks to database: %s", e)
 
     # Record routing log in SQLite if DB session and run_id available
     if db_session and run_id:
