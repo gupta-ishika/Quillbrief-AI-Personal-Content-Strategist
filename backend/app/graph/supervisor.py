@@ -7,6 +7,8 @@ import httpx
 from sqlalchemy.orm import Session
 
 from app.config import settings
+from app.db.base import generate_uuid, utc_now
+from app.db.models import Approval
 from app.db.repositories.runs import create_routing_log, record_run_event, sync_run_tasks
 from app.graph.budgets import (
     detect_routing_repeat,
@@ -94,8 +96,11 @@ def calculate_eligible_nodes(state: ContentState) -> list[NodeName]:
     data_thin = state.get("data_is_thin", False) or research_results.get("is_thin", False)
     research_fresh = has_research and not research_stale and not data_thin
 
-    # If research is stale or thin: research must be repeated (AT-05, AT-06)
+    # If research is stale or thin: research must be repeated, or depth increase proposed (AT-05, AT-06)
     if (has_research and (research_stale or data_thin)) or (has_insights and data_thin):
+        depth_lvl = state.get("depth_level", "standard")
+        if data_thin and depth_lvl in ("quick", "standard"):
+            return ["research", "approval"]
         if not insights_fresh:
             return ["listener", "research"]
         return ["research"]
@@ -135,12 +140,15 @@ def get_deterministic_default_node(
     eligible_nodes: list[NodeName], state: ContentState
 ) -> tuple[NodeName, str]:
     """Returns a deterministic fallback node and rationale when model output is invalid or fails."""
+    if state.get("approval_status") == "PENDING" and "approval" in eligible_nodes:
+        return "approval", "Approval is pending; routing to approval node."
+
     priority_order: list[NodeName] = [
-        "approval",
         "strategist",
         "writer",
         "listener",
         "research",
+        "approval",
         "repurposer",
         "analyst",
         "END",
@@ -609,6 +617,27 @@ async def supervisor_node(
                         "unfinished_tasks": unfinished,
                     },
                 )
+                # Offer depth increase request if depth is quick or standard (IT-05, IT-06)
+                current_depth = state.get("depth_level", "standard")
+                if current_depth in ("quick", "standard"):
+                    existing_app = (
+                        db_session.query(Approval)
+                        .filter_by(run_id=run_id, item_type="depth_increase", status="PENDING")
+                        .first()
+                    )
+                    if not existing_app:
+                        proposed_depth = "deep" if current_depth == "standard" else "standard"
+                        proposal_app = Approval(
+                            id=generate_uuid(),
+                            run_id=run_id,
+                            item_type="depth_increase",
+                            item_id=run_id,
+                            status="PENDING",
+                            feedback_text=f"Step budget reached at '{current_depth}'. Propose increasing depth to '{proposed_depth}'.{unfinished_info}",
+                            requested_at=utc_now(),
+                        )
+                        db_session.add(proposal_app)
+                        db_session.commit()
             except Exception as e:
                 logger.warning("Failed to record routing log or limit event: %s", e)
         return {
@@ -782,7 +811,7 @@ async def supervisor_node(
         except Exception as e:
             logger.warning("Failed to record routing log to database: %s", e)
 
-    return {
+    ret_dict: dict[str, Any] = {
         "next_action": chosen_node,
         "task_list": current_tasks,
         "route_history": state.get("route_history", []) + [chosen_node],
@@ -791,3 +820,9 @@ async def supervisor_node(
         "degraded": degraded,
         "degraded_reason": degraded_reason,
     }
+    if chosen_node == "approval":
+        if state.get("data_is_thin") and state.get("depth_level", "standard") in ("quick", "standard"):
+            ret_dict["approval_item_type"] = "depth_increase"
+            ret_dict["approval_status"] = "PENDING"
+            ret_dict["approval_item_id"] = run_id
+    return ret_dict

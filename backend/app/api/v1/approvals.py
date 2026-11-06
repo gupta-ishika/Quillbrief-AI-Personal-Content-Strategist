@@ -6,9 +6,10 @@ from sqlalchemy.orm import Session
 
 from app.api.errors import AppException
 from app.db.base import utc_now
-from app.db.models import Approval, ContentPlan, CriticEvaluation, Draft, Run
+from app.db.models import Approval, ContentPlan, CriticEvaluation, Draft, Run, Task
 from app.db.repositories import create_plan_version
 from app.db.repositories.plans import create_draft_version
+from app.db.repositories.runs import record_run_event
 from app.db.session import get_db
 from app.schemas.approvals import (
     ApprovalDecisionRequest,
@@ -85,9 +86,27 @@ def _to_approval_response(db: Session, approval: Approval) -> ApprovalResponse:
                 "posted_platform_id": draft.posted_platform_id,
             }
     elif approval.item_type == "depth_increase":
+        current_depth = "standard"
+        unfinished: list[str] = []
+        if approval.run_id:
+            run_obj = db.query(Run).filter_by(id=approval.run_id).first()
+            if run_obj:
+                current_depth = run_obj.depth_level
+            tasks = (
+                db.query(Task)
+                .filter_by(run_id=approval.run_id)
+                .order_by(Task.position.asc())
+                .all()
+            )
+            unfinished = [t.title for t in tasks if t.status not in ("DONE", "SKIPPED")]
+        proposed_depth = "deep" if current_depth == "standard" else "standard"
         item_details = {
             "proposal": "depth_increase",
-            "reason": approval.feedback_text or "Depth increase suggested by model",
+            "current_depth": current_depth,
+            "proposed_depth": proposed_depth,
+            "reason": approval.feedback_text
+            or f"Depth increase proposal from {current_depth} to {proposed_depth}",
+            "unfinished_tasks": unfinished,
         }
 
     parsed_edited: Any = None
@@ -309,6 +328,24 @@ def decide_approval_endpoint(
             )
             resulting_item_id = new_draft.id
 
+    elif approval.item_type == "depth_increase":
+        resulting_item_id = approval.item_id
+        if req.decision == "APPROVED" and approval.run_id:
+            run = db.query(Run).filter_by(id=approval.run_id).first()
+            if run:
+                old_depth = run.depth_level
+                new_depth = "deep" if old_depth == "standard" else "standard"
+                run.depth_level = new_depth
+                run.stop_reason = None
+                record_run_event(
+                    db,
+                    run.id,
+                    "note",
+                    {
+                        "message": f"Depth level raised from '{old_depth}' to '{new_depth}' for run '{run.id}'."
+                    },
+                )
+
     # 4. Update Approval record
     approval.status = "DECIDED"
     approval.decision = req.decision
@@ -322,14 +359,20 @@ def decide_approval_endpoint(
     approval.resulting_item_id = resulting_item_id
     approval.decided_at = utc_now()
 
-    # 5. If linked to a run, update run status back to RUNNING
+    # 5. If linked to a run, update run status back to RUNNING if approved
     resumed_run_id: str | None = None
     if approval.run_id:
         run = db.query(Run).filter_by(id=approval.run_id).first()
-        if run and run.status == "WAITING_APPROVAL":
-            run.status = "RUNNING"
-            run.updated_at = utc_now()
-        resumed_run_id = approval.run_id
+        if run:
+            if req.decision == "APPROVED":
+                if run.status in ("WAITING_APPROVAL", "STOPPED"):
+                    run.status = "RUNNING"
+                    run.updated_at = utc_now()
+                resumed_run_id = approval.run_id
+            elif req.decision == "REJECTED":
+                if run.status == "WAITING_APPROVAL":
+                    run.status = "RUNNING"
+                    resumed_run_id = approval.run_id
 
     db.commit()
     db.refresh(approval)

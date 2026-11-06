@@ -73,14 +73,26 @@ def approval_node(
             session.close()
 
     # 3. Trigger LangGraph interrupt to pause execution
+    details_payload: Any = None
+    if item_type == "plan":
+        details_payload = state.get("content_plan")
+    elif item_type == "draft":
+        details_payload = state.get("current_draft_id")
+    elif item_type == "depth_increase":
+        cur_depth = state.get("depth_level", "standard")
+        details_payload = {
+            "proposal": "depth_increase",
+            "current_depth": cur_depth,
+            "proposed_depth": "deep" if cur_depth == "standard" else "standard",
+            "reason": state.get("degraded_reason") or "Depth increase suggested by model or budget stop",
+        }
+
     review_payload = {
         "approval_id": approval_id,
         "run_id": run_id,
         "item_type": item_type,
         "item_id": item_id,
-        "details": state.get("content_plan")
-        if item_type == "plan"
-        else state.get("current_draft_id"),
+        "details": details_payload,
     }
 
     # interrupt() halts the graph, persists checkpoint to checkpoints.db,
@@ -196,6 +208,18 @@ def approval_node(
                     if app_record:
                         app_record.resulting_item_id = new_draft.id
 
+        # Handle Depth Increase decisions (GRAPH-09, IT-06, DATABASE.md 226)
+        elif item_type == "depth_increase":
+            if decision_val == "APPROVED":
+                current_depth = state.get("depth_level", "standard")
+                target_depth = "deep" if current_depth == "standard" else "standard"
+                if run_id:
+                    run_rec = session.query(Run).filter_by(id=run_id).first()
+                    if run_rec:
+                        run_rec.depth_level = target_depth
+                        run_rec.stop_reason = None
+            resulting_plan_id = item_id
+
         # Update run status back to RUNNING
         if run_id:
             run_rec = session.query(Run).filter_by(id=run_id).first()
@@ -224,6 +248,14 @@ def approval_node(
         result_state["content_plan"] = resulting_plan_items
     elif item_type == "draft":
         result_state["current_draft_id"] = resulting_plan_id
+    elif item_type == "depth_increase":
+        if decision_val == "APPROVED":
+            current_depth = state.get("depth_level", "standard")
+            target_depth = "deep" if current_depth == "standard" else "standard"
+            result_state["depth_level"] = target_depth
+            result_state["stop_reason"] = None
+        else:
+            result_state["depth_level"] = state.get("depth_level", "standard")
 
     return result_state
 

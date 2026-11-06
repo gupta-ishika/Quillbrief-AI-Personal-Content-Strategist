@@ -393,17 +393,31 @@ def test_at06_stale_research_is_repeated_fresh_research_is_not() -> None:
     assert "research" in eligible_stale
 
 
-def test_at05_thin_data_triggers_research_repeat() -> None:
-    """AT-05 / GRAPH-07: Thin data triggers research repetition to gather evidence."""
-    state_thin_data: ContentState = {
+def test_at05_thin_data_triggers_research_repeat_or_depth_proposal() -> None:
+    """AT-05 / GRAPH-07 / GRAPH-09: Thin data triggers research repetition or depth increase proposal."""
+    # At standard depth, both research and approval (depth increase proposal) are eligible
+    state_thin_standard: ContentState = {
+        "depth_level": "standard",
         "comment_insights": [{"theme": "FastAPI"}],
         "research_results": {"topics": ["Single item"]},
         "data_is_thin": True,
         "current_plan_id": None,
         "approval_status": "NONE",
     }
-    eligible = calculate_eligible_nodes(state_thin_data)
-    assert eligible == ["research"]
+    eligible_standard = calculate_eligible_nodes(state_thin_standard)
+    assert set(eligible_standard) == {"research", "approval"}
+
+    # At deep depth (max level), cannot propose higher depth, so only research is eligible
+    state_thin_deep: ContentState = {
+        "depth_level": "deep",
+        "comment_insights": [{"theme": "FastAPI"}],
+        "research_results": {"topics": ["Single item"]},
+        "data_is_thin": True,
+        "current_plan_id": None,
+        "approval_status": "NONE",
+    }
+    eligible_deep = calculate_eligible_nodes(state_thin_deep)
+    assert eligible_deep == ["research"]
 
 
 def test_at07_brief_with_no_new_posts_skips_analyst() -> None:

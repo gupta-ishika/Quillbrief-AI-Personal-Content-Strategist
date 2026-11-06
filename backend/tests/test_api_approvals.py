@@ -323,3 +323,113 @@ def test_decide_approval_draft_flow(client: TestClient, db_session: Session) -> 
     assert new_draft.status == "APPROVED"
     assert new_draft.created_by == "creator"
     assert new_draft.content == new_content
+
+
+def test_decide_approval_depth_increase_flow(client: TestClient, db_session: Session) -> None:
+    """IT-05 / IT-06 / GRAPH-09: Depth increase proposal review and approval."""
+    from app.db.models import RunEvent, Task
+
+    # 1. Create a run at 'quick' depth that hit budget stop
+    run = create_run(db_session, run_type="goal", depth_level="quick")
+    run.status = "STOPPED"
+    run.stop_reason = "step_budget_exceeded"
+    db_session.commit()
+
+    # Create tasks (one DONE, two unfinished)
+    t1 = Task(run_id=run.id, title="Analyze comments", agent="listener", position=1, status="DONE")
+    t2 = Task(run_id=run.id, title="Draft script", agent="writer", position=2, status="TODO")
+    t3 = Task(run_id=run.id, title="Critic review", agent="critic", position=3, status="TODO")
+    db_session.add_all([t1, t2, t3])
+
+    # Pending depth increase approval
+    approval = Approval(
+        id=generate_uuid(),
+        run_id=run.id,
+        item_type="depth_increase",
+        item_id=run.id,
+        status="PENDING",
+        feedback_text="Step budget reached at 'quick'. Propose increasing depth to 'standard'. Unfinished tasks: Draft script, Critic review.",
+    )
+    db_session.add(approval)
+    db_session.commit()
+
+    # 2. GET /approvals/{id} verifies populated item_details
+    get_res = client.get(f"/api/v1/approvals/{approval.id}", headers=HEADERS)
+    assert get_res.status_code == 200
+    data = get_res.json()
+    assert data["item_type"] == "depth_increase"
+    assert data["item_details"]["current_depth"] == "quick"
+    assert data["item_details"]["proposed_depth"] == "standard"
+    assert "Draft script" in data["item_details"]["unfinished_tasks"]
+    assert "Critic review" in data["item_details"]["unfinished_tasks"]
+
+    # 3. Approve depth increase
+    decide_res = client.post(
+        f"/api/v1/approvals/{approval.id}/decision",
+        json={
+            "item_id": run.id,
+            "decision": "APPROVED",
+        },
+        headers=HEADERS,
+    )
+    assert decide_res.status_code == 200
+    decide_json = decide_res.json()
+    assert decide_json["resulting_item_id"] == run.id
+    assert decide_json["resumed_run_id"] == run.id
+
+    # 4. Verify run limits raised for that run only (IT-06)
+    db_session.refresh(run)
+    assert run.depth_level == "standard"
+    assert run.status == "RUNNING"
+    assert run.stop_reason is None
+
+    # Verify event recorded
+    event = db_session.query(RunEvent).filter_by(run_id=run.id, event_type="note").first()
+    assert event is not None
+    assert "Depth level raised from 'quick' to 'standard'" in event.payload_json["message"]
+
+
+def test_decide_approval_depth_increase_rejected(client: TestClient, db_session: Session) -> None:
+    """GRAPH-09: Rejection of depth increase leaves depth level unchanged."""
+
+    run = create_run(db_session, run_type="goal", depth_level="quick")
+    run.status = "STOPPED"
+    run.stop_reason = "step_budget_exceeded"
+    db_session.commit()
+
+    approval = Approval(
+        id=generate_uuid(),
+        run_id=run.id,
+        item_type="depth_increase",
+        item_id=run.id,
+        status="PENDING",
+        feedback_text="Step budget reached.",
+    )
+    db_session.add(approval)
+    db_session.commit()
+
+    # Reject without feedback -> 422
+    err_res = client.post(
+        f"/api/v1/approvals/{approval.id}/decision",
+        json={
+            "item_id": run.id,
+            "decision": "REJECTED",
+        },
+        headers=HEADERS,
+    )
+    assert err_res.status_code == 422
+
+    # Reject with feedback
+    decide_res = client.post(
+        f"/api/v1/approvals/{approval.id}/decision",
+        json={
+            "item_id": run.id,
+            "decision": "REJECTED",
+            "feedback_text": "Keep at quick depth, stop the run.",
+        },
+        headers=HEADERS,
+    )
+    assert decide_res.status_code == 200
+
+    db_session.refresh(run)
+    assert run.depth_level == "quick"  # NOT raised
