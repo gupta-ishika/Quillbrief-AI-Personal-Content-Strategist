@@ -81,9 +81,9 @@ Goal: controlled iteration that improves draft quality.
 - [x] DB-03 Add drafts (with lineage, versions and posted reference) and critic_evaluations
 - [x] VER-02 Draft versioning: every edit or revision creates a version, approval ties to the exact version, editing approved content invalidates the approval, creator edits run the deterministic checks only, mark-as-posted records the approved version
 - [x] API-03 Implement plans and drafts endpoints, including edit, versions, mark-posted and stale-version errors
-- [ ] UI-04 Build the Draft review screen with the Critic panel
-- [ ] UI-05 Add the Copy and Mark as posted actions
-- [ ] TEST-02 Test the revision loop, the retry limit, the exhausted-limit banner, editing before and after approval, and marking an unapproved or outdated version as posted
+- [x] UI-04 Build the Draft review screen with the Critic panel
+- [x] UI-05 Add the Copy and Mark as posted actions
+- [x] TEST-02 Test the revision loop, the retry limit, the exhausted-limit banner, editing before and after approval, and marking an unapproved or outdated version as posted
 
 ---
 

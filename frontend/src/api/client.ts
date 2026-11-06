@@ -5,7 +5,14 @@ import {
   ChannelResolveResponse,
   CreatorChannelItem,
   DepthLevel,
+  DraftEditRequest,
+  DraftEditResponse,
+  DraftResponse,
+  DraftVersionSummary,
   HealthResponse,
+  LinkPostedRequest,
+  MarkPostedRequest,
+  MarkPostedResponse,
   OnboardingCompleteResponse,
   OnboardingResponse,
   PlanDetails,
@@ -198,6 +205,59 @@ export const apiClient = {
     data: { expected_version: number; items: unknown[] }
   ): Promise<{ plan_id: string; approval_id: string }> =>
     request<{ plan_id: string; approval_id: string }>(`/plans/${planId}/edit`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  // Drafts
+  getDraft: (draftId: string): Promise<DraftResponse> =>
+    request<DraftResponse>(`/drafts/${draftId}`),
+
+  listDrafts: (params?: {
+    status?: string;
+    platform?: string;
+    kind?: string;
+    lineage_id?: string;
+    is_latest?: boolean;
+    limit?: number;
+  }): Promise<DraftResponse[]> => {
+    const searchParams = new URLSearchParams();
+    if (params?.status) searchParams.append('status', params.status);
+    if (params?.platform) searchParams.append('platform', params.platform);
+    if (params?.kind) searchParams.append('kind', params.kind);
+    if (params?.lineage_id) searchParams.append('lineage_id', params.lineage_id);
+    if (params?.is_latest !== undefined) searchParams.append('is_latest', String(params.is_latest));
+    if (params?.limit) searchParams.append('limit', String(params.limit));
+    const qs = searchParams.toString();
+    return request<DraftResponse[]>(`/drafts${qs ? `?${qs}` : ''}`);
+  },
+
+  getDraftVersions: (draftId: string): Promise<DraftVersionSummary[]> =>
+    request<DraftVersionSummary[]>(`/drafts/${draftId}/versions`),
+
+  editDraft: (
+    draftId: string,
+    data: DraftEditRequest
+  ): Promise<DraftEditResponse> =>
+    request<DraftEditResponse>(`/drafts/${draftId}/edit`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  markDraftPosted: (
+    draftId: string,
+    data: MarkPostedRequest
+  ): Promise<MarkPostedResponse> =>
+    request<MarkPostedResponse>(`/drafts/${draftId}/mark-posted`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  linkDraftPosted: (
+    draftId: string,
+    data: LinkPostedRequest
+  ): Promise<DraftResponse> =>
+    request<DraftResponse>(`/drafts/${draftId}/link-posted`, {
       method: 'POST',
       body: JSON.stringify(data),
     }),

@@ -13,6 +13,7 @@ import { Button } from '../common/Button';
 import { Badge } from '../common/Badge';
 import { Card } from '../common/Card';
 import { PlanReview } from './PlanReview';
+import { DraftReview } from '../drafts/DraftReview';
 
 export interface ApprovalsInboxProps {
   initialApprovalId?: string | null;
@@ -127,7 +128,20 @@ export const ApprovalsInbox: React.FC<ApprovalsInboxProps> = ({
       );
     }
 
-    // Fallback for draft or depth_increase in v1
+    if (selectedApproval.item_type === 'draft') {
+      return (
+        <DraftReview
+          approval={selectedApproval}
+          onDecisionSubmitted={handleDecisionSubmitted}
+          onBack={() => {
+            setSelectedApproval(null);
+            if (onClearInitialApprovalId) onClearInitialApprovalId();
+          }}
+        />
+      );
+    }
+
+    // Fallback for depth_increase in v1
     return (
       <div className="space-y-6">
         <Button

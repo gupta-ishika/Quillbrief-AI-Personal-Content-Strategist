@@ -7,17 +7,20 @@ Update this file after every task. DECISIONS.md holds permanent decisions. This 
 ## Current status
 
 Phase 1 is 100% complete across both Backend and Frontend.
-Phase 2 (Writer and Critic loop) is in active development:
+Phase 2 (Writer and Critic loop) is 100% complete across both Backend and Frontend:
 - AGT-04 (Writer Agent): Supports scripts, titles, descriptions, captions, and posts with 4,000 token limit, untrusted-data boundary directives, declared-only creator profile, versioned lineage persistence, and deterministic fallbacks.
 - TOOL-05 (Draft Checker): Deterministic quality checks for word/character counts, platform length limits, and required sections (Hook, Body, CTA) using zero LLM tokens.
 - AGT-05 (Critic Agent): 5-dimension rubric scoring (Hook, Tone, Accuracy, Length, Relevance), deterministic check enforcement (blocking passing if deterministic checks fail), review limits by depth (Quick 2, Standard 3, Deep 3), best-draft selection in lineage when reviews are exhausted, and persistent evaluation records.
 - GRAPH-05 (Writer-Critic Loop & Graph Routing): Connected Writer and Critic in LangGraph with conditional routing (`writer -> critic -> writer | approval`), routing from supervisor to writer, and best-draft fallback on review exhaustion.
 - DB-03 (Drafts & Critic Evaluations): SQLite models, migrations, constraints, and cascade deletion.
 - VER-02 & API-03 (Draft Versioning & REST Endpoints): Draft versioning, exact-version approvals, optimistic locking (STALE_VERSION), deterministic checks on creator edits (CHECKS_FAILED), mark-as-posted tracking (NOT_APPROVED / STALE_VERSION), and post-link attachment (LINK_REQUIRED).
+- UI-04 (Draft Review Screen with Critic Panel): Full Draft review interface matching DESIGN 4.4, with live character/word count, platform limits, deterministic checks, inline editing, Critic evaluation panel (rubric dimensions, score, review progress, exhausted review limit banner, feedback items).
+- UI-05 (Copy & Mark as Posted Actions): One-click clipboard copy with visual feedback, mark as posted modal (optional URL or platform ID), unlinked posted draft badge ("Posted (no link)") with warning note and "Add link" dialog.
+- TEST-02: Comprehensive integration and unit test coverage in `DraftReview.test.tsx` verifying revision loops, retry limits, exhausted-limit banner, editing before/after approval, stale version warnings, and posted draft flows.
 
 ## Current task
 
-Phase 2: Writer and Critic loop (UI-04: Build Draft review screen with the Critic panel; UI-05: Add Copy and Mark as posted actions)
+Phase 3: Goal decomposition and replanning (GRAPH-06: Add task list creation and replanning to the Supervisor)
 
 ## Key decisions in force
 
@@ -60,6 +63,12 @@ Phase 2: Writer and Critic loop (UI-04: Build Draft review screen with the Criti
 
 ## Update log
 
+- UI-04, UI-05, TEST-02 done (2026-11-06): Completed frontend Draft Review screen, Critic evaluation panel, Drafts Library, and end-to-end integration test suite:
+  - Draft Review screen (`DraftReview.tsx`): Displays formatted draft content, live word and character counters, platform limit status (YouTube Title, Description, Community Post, Instagram Caption, LinkedIn Post, X Thread), section indicators (Hook, Body, CTA), and immutable version switcher with approval warning notice.
+  - Critic panel: 5-dimension rubric breakdown (Hook, Tone, Accuracy, Length, Relevance) with scores and visual bars, review iteration tracker ("Review X of 3"), review limit exhausted alert banner with open issues notice, and itemized strengths, suggestions, and issues.
+  - Interactive actions: Approve draft, Reject with required feedback modal, inline edit mode with deterministic quality check validations, warning on editing approved content ("Saving creates a new version that needs approval"), one-click clipboard copy with visual feedback, mark as posted modal (with optional URL and platform ID), unlinked posted draft indicator ("Posted (no link)") with warning note and "Add link" dialog.
+  - Drafts Library (`DraftsLibrary.tsx`): Multi-tab library view (Ready to post, Posted, All drafts) with platform and kind filters, direct review navigation, and quick copy/mark-as-posted actions.
+  - Test suite (`DraftReview.test.tsx`): 9 tests covering rendering, rubric display, review limit exhausted banner, approval, rejection with feedback, inline edit validation, editing before/after approval, copy to clipboard, and mark as posted flows. Zero TypeScript or ESLint errors, clean production bundle.
 - GRAPH-05, DB-03, VER-02, API-03 done (2026-11-06): Completed backend engine, database, and API layer for Writer-Critic loop and draft versioning:
   - Graph routing (`backend/app/graph/builder.py`): writer and critic nodes integrated with cyclic revision edge, review-count limit check, best-draft fallback, and interrupt-based human approval step.
   - Draft & Critic evaluation models (`backend/app/db/models.py`, `backend/alembic/versions/`): draft lineage tracking, immutable versions, check constraints, cascade deletions.

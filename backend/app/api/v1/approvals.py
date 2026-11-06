@@ -6,14 +6,16 @@ from sqlalchemy.orm import Session
 
 from app.api.errors import AppException
 from app.db.base import utc_now
-from app.db.models import Approval, ContentPlan, Draft, Run
+from app.db.models import Approval, ContentPlan, CriticEvaluation, Draft, Run
 from app.db.repositories import create_plan_version
+from app.db.repositories.plans import create_draft_version
 from app.db.session import get_db
 from app.schemas.approvals import (
     ApprovalDecisionRequest,
     ApprovalDecisionResponse,
     ApprovalResponse,
 )
+from app.tools.draft_checker import check_draft
 
 router = APIRouter(prefix="/approvals", tags=["approvals"])
 
@@ -53,6 +55,20 @@ def _to_approval_response(db: Session, approval: Approval) -> ApprovalResponse:
     elif approval.item_type == "draft":
         draft = db.query(Draft).filter_by(id=approval.item_id).first()
         if draft:
+            eval_rec = db.query(CriticEvaluation).filter_by(draft_id=draft.id).first()
+            critic_eval = None
+            if eval_rec:
+                critic_eval = {
+                    "id": eval_rec.id,
+                    "draft_id": eval_rec.draft_id,
+                    "review_number": eval_rec.review_number,
+                    "score": eval_rec.score,
+                    "passed": eval_rec.passed,
+                    "rubric": eval_rec.rubric_json or {},
+                    "deterministic": eval_rec.deterministic_json or {},
+                    "feedback": eval_rec.feedback_json or {},
+                    "created_at": eval_rec.created_at.isoformat() if eval_rec.created_at else None,
+                }
             item_details = {
                 "id": draft.id,
                 "lineage_id": draft.lineage_id,
@@ -62,6 +78,11 @@ def _to_approval_response(db: Session, approval: Approval) -> ApprovalResponse:
                 "content": draft.content,
                 "status": draft.status,
                 "created_by": draft.created_by,
+                "critic_evaluation": critic_eval,
+                "posted_at": draft.posted_at.isoformat() if draft.posted_at else None,
+                "posted_ref": draft.posted_ref,
+                "posted_url": draft.posted_url,
+                "posted_platform_id": draft.posted_platform_id,
             }
     elif approval.item_type == "depth_increase":
         item_details = {
@@ -158,6 +179,7 @@ def decide_approval_endpoint(
         )
 
     plan: ContentPlan | None = None
+    draft: Draft | None = None
     if approval.item_type == "plan":
         plan = db.query(ContentPlan).filter_by(id=approval.item_id).first()
         if not plan or plan.status == "SUPERSEDED":
@@ -165,6 +187,14 @@ def decide_approval_endpoint(
                 status_code=status.HTTP_409_CONFLICT,
                 code="STALE_APPROVAL",
                 message="Content plan version has already been superseded.",
+            )
+    elif approval.item_type == "draft":
+        draft = db.query(Draft).filter_by(id=approval.item_id).first()
+        if not draft or draft.status == "SUPERSEDED":
+            raise AppException(
+                status_code=status.HTTP_409_CONFLICT,
+                code="STALE_APPROVAL",
+                message="Draft version has already been superseded.",
             )
 
     # 2. Validation of decision payloads
@@ -233,6 +263,51 @@ def decide_approval_endpoint(
             )
             new_plan.approved_at = utc_now()
             resulting_item_id = new_plan.id
+    elif approval.item_type == "draft" and draft:
+        if req.decision == "APPROVED":
+            draft.status = "APPROVED"
+            draft.updated_at = utc_now()
+            resulting_item_id = draft.id
+        elif req.decision == "REJECTED":
+            draft.status = "REJECTED"
+            draft.updated_at = utc_now()
+            resulting_item_id = draft.id
+        elif req.decision == "EDITED":
+            content_str = (
+                req.edited_content
+                if isinstance(req.edited_content, str)
+                else json.dumps(req.edited_content)
+            )
+            check_result = check_draft(content_str, draft.kind, draft.platform)
+            if not check_result.passed:
+                raise AppException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    code="CHECKS_FAILED",
+                    message="Draft failed deterministic quality checks.",
+                    details={
+                        "issues": check_result.issues,
+                        "missing_sections": check_result.missing_sections,
+                        "metrics": check_result.metrics,
+                    },
+                )
+            draft.status = "SUPERSEDED"
+            draft.updated_at = utc_now()
+            new_version = draft.version + 1
+            new_draft = create_draft_version(
+                db=db,
+                lineage_id=draft.lineage_id,
+                version=new_version,
+                kind=draft.kind,
+                platform=draft.platform,
+                content=content_str,
+                created_by="creator",
+                previous_version_id=draft.id,
+                plan_item_id=draft.plan_item_id,
+                item_key=draft.item_key,
+                parent_draft_id=draft.parent_draft_id,
+                status="APPROVED",
+            )
+            resulting_item_id = new_draft.id
 
     # 4. Update Approval record
     approval.status = "DECIDED"

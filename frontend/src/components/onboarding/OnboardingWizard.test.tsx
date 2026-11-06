@@ -53,7 +53,7 @@ describe('OnboardingWizard', () => {
       time_zone: 'Asia/Kolkata',
       onboarding_completed: false,
     });
-    vi.mocked(apiClient.updateSettings).mockResolvedValue({} as any);
+    vi.mocked(apiClient.updateSettings).mockResolvedValue({} as never);
 
     const user = userEvent.setup();
     render(<OnboardingWizard onCompleted={onCompleted} />);

@@ -8,9 +8,10 @@ from sqlalchemy.pool import StaticPool
 
 import app.db.models  # noqa: F401
 from app.config import settings
-from app.db.base import Base
-from app.db.models import Approval, ContentPlan
+from app.db.base import Base, generate_uuid
+from app.db.models import Approval, ContentPlan, Draft
 from app.db.repositories import create_plan_version, create_run
+from app.db.repositories.plans import create_draft_version
 from app.db.session import get_db
 from app.main import app
 
@@ -280,3 +281,45 @@ def test_decide_approval_stale_errors(client: TestClient, db_session: Session) -
     )
     assert res_already.status_code == 409
     assert res_already.json()["error"]["code"] == "STALE_APPROVAL"
+
+
+def test_decide_approval_draft_flow(client: TestClient, db_session: Session) -> None:
+    lineage_id = generate_uuid()
+    draft = create_draft_version(
+        db=db_session,
+        lineage_id=lineage_id,
+        version=1,
+        kind="script",
+        platform="youtube",
+        content="Hook: Attention.\nBody: In-depth technical breakdown.\nCTA: Subscribe now.",
+        created_by="model",
+        status="PENDING_APPROVAL",
+    )
+    approval = Approval(item_type="draft", item_id=draft.id, status="PENDING")
+    db_session.add(approval)
+    db_session.commit()
+
+    # 1. Edit draft via approval
+    new_content = "Hook: New hook.\nBody: Detailed code walkthrough.\nCTA: Check link below."
+    edit_res = client.post(
+        f"/api/v1/approvals/{approval.id}/decision",
+        json={
+            "item_id": draft.id,
+            "decision": "EDITED",
+            "edited_content": new_content,
+        },
+        headers=HEADERS,
+    )
+    assert edit_res.status_code == 200
+    resulting_id = edit_res.json()["resulting_item_id"]
+    assert resulting_id != draft.id
+
+    db_session.refresh(draft)
+    assert draft.status == "SUPERSEDED"
+
+    new_draft = db_session.query(Draft).filter_by(id=resulting_id).first()
+    assert new_draft is not None
+    assert new_draft.version == 2
+    assert new_draft.status == "APPROVED"
+    assert new_draft.created_by == "creator"
+    assert new_draft.content == new_content

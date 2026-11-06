@@ -186,7 +186,7 @@ export interface ApprovalResponse {
   edited_content?: unknown;
   resulting_item_id?: string | null;
   brief_id?: string | null;
-  item_details?: PlanDetails | Record<string, unknown> | null;
+  item_details?: PlanDetails | DraftResponse | Record<string, unknown> | null;
   requested_at: string;
   decided_at?: string | null;
 }
@@ -202,6 +202,115 @@ export interface ApprovalDecisionResponse {
   approval: ApprovalResponse;
   resulting_item_id?: string | null;
   resumed_run_id?: string | null;
+}
+
+export type DraftKind =
+  | 'script'
+  | 'title'
+  | 'description'
+  | 'community_post'
+  | 'caption'
+  | 'linkedin_post'
+  | 'x_thread';
+
+export type DraftStatus =
+  | 'WRITING'
+  | 'IN_REVIEW'
+  | 'PENDING_APPROVAL'
+  | 'APPROVED'
+  | 'REJECTED'
+  | 'SUPERSEDED'
+  | 'POSTED';
+
+export interface CriticRubricItem {
+  score: number;
+  notes: string;
+}
+
+export interface CriticDeterministicResult {
+  passed: boolean;
+  issues?: string[];
+  missing_sections?: string[];
+  metrics?: Record<string, number>;
+}
+
+export interface CriticFeedbackResult {
+  issues?: string[];
+  strengths?: string[];
+  suggestions?: string[];
+}
+
+export interface CriticEvaluationResponse {
+  id: string;
+  draft_id: string;
+  review_number: number;
+  score: number;
+  passed: boolean;
+  rubric: Record<string, CriticRubricItem>;
+  deterministic: CriticDeterministicResult;
+  feedback: CriticFeedbackResult;
+  created_at: string;
+}
+
+export interface DraftResponse {
+  id: string;
+  lineage_id: string;
+  version: number;
+  previous_version_id?: string | null;
+  plan_item_id?: string | null;
+  item_key?: string | null;
+  parent_draft_id?: string | null;
+  kind: DraftKind;
+  platform: string;
+  content: string;
+  created_by: 'model' | 'creator';
+  status: DraftStatus;
+  is_latest: boolean;
+  critic_evaluation?: CriticEvaluationResponse | null;
+  posted_at?: string | null;
+  posted_ref?: 'url' | 'platform_id' | 'none' | null;
+  posted_url?: string | null;
+  posted_platform_id?: string | null;
+  child_draft_ids?: string[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DraftVersionSummary {
+  version: number;
+  status: DraftStatus;
+  created_by: string;
+  created_at: string;
+  is_approved: boolean;
+  is_posted: boolean;
+}
+
+export interface DraftEditRequest {
+  content: string;
+  expected_version: number;
+}
+
+export interface DraftEditResponse {
+  draft_id: string;
+  approval_id: string;
+}
+
+export interface MarkPostedRequest {
+  posted_url?: string | null;
+  platform_content_id?: string | null;
+  posted_at?: string | null;
+}
+
+export interface MarkPostedResponse {
+  draft_id: string;
+  status: 'POSTED';
+  posted_ref: 'url' | 'platform_id' | 'none';
+  analytics_eligible: boolean;
+}
+
+export interface LinkPostedRequest {
+  posted_url?: string | null;
+  platform_content_id?: string | null;
 }
 
 export interface HealthResponse {

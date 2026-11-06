@@ -9,6 +9,7 @@ import { OnboardingWizard } from './components/onboarding/OnboardingWizard';
 import { HomeScreen } from './components/home/HomeScreen';
 import { ApprovalsInbox } from './components/approvals/ApprovalsInbox';
 import { SettingsScreen } from './components/settings/SettingsScreen';
+import { DraftsLibrary } from './components/drafts/DraftsLibrary';
 import { PlaceholderScreen } from './components/common/PlaceholderScreen';
 
 const queryClient = new QueryClient({
@@ -129,13 +130,7 @@ export const AppContent: React.FC = () => {
           phase="Phase 3"
         />
       )}
-      {currentTab === 'library' && (
-        <PlaceholderScreen
-          title="Drafts Library"
-          description="Review ready-to-post scripts, descriptions, and repurposed social posts."
-          phase="Phase 2"
-        />
-      )}
+      {currentTab === 'library' && <DraftsLibrary />}
       {currentTab === 'insights' && (
         <PlaceholderScreen
           title="Audience Insights"
