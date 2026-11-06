@@ -12,10 +12,11 @@ Phase 3 (Goal decomposition and replanning) is in active development:
 - GRAPH-06 (Goal decomposition and replanning): Supervisor dynamically decomposes goals into goal-specific task lists (e.g. script drafting vs. repurposing vs. analytics vs. audience research - AT-08), executes automatic task progression (marking executing node's task DONE), dynamically replans on rejection, respects immutable DONE tasks, normalizes continuous 1..N positions, and synchronizes to SQLite `tasks` table.
 - GRAPH-07 (Skip and repeat logic): Supervisor skips Listener when comment insights are fresh and repeats Research when research is stale or data is thin (AT-05, AT-06); Analyst is skipped in weekly brief when there are no new posts (AT-07); tasks reflect SKIPPED and injected REPEAT actions dynamically.
 - GRAPH-08 (Depth levels and limits enforcement): Strict enforcement of all limits across Quick, Standard, and Deep depth levels (supervisor steps 15/30/50, tool steps per agent 4/6/10, review limits 2/3/3, tool call caps for comments, videos, searches, and pages, and per-call token input caps with heuristic trimming). Budget stops record limit_reached event and report unfinished tasks.
+- GRAPH-09 (Depth increase proposal and approval): Depth increase proposal approval flow (IT-05, IT-06, AT-05). When step budget is reached or data is thin, supervisor creates or routes to pending depth_increase approval; approval raises depth level for that run only (quick -> standard, standard -> deep), resumes run, and records run event note; rejection preserves depth limits.
 
 ## Current task
 
-Phase 3: Goal decomposition and replanning (GRAPH-09: Add depth increase proposal and its approval)
+Phase 3: Goal decomposition and replanning (UI-06: Build the Runs history and routing log timeline)
 
 ## Key decisions in force
 

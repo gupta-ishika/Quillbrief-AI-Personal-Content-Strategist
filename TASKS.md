@@ -94,7 +94,7 @@ Goal: different goals and starting states produce different routes without hardc
 - [x] GRAPH-06 Add task list creation and replanning to the Supervisor
 - [x] GRAPH-07 Add skip and repeat logic based on data freshness
 - [x] GRAPH-08 Add depth levels and enforcement of all limits
-- [ ] GRAPH-09 Add the depth increase proposal and its approval
+- [x] GRAPH-09 Add the depth increase proposal and its approval
 - [ ] UI-06 Build the Runs history and the routing log timeline
 - [ ] TEST-03 Test thin data, stale data, limit reached and depth increase
 
