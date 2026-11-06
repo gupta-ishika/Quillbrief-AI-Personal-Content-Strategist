@@ -434,7 +434,7 @@ async def critic_node(
                     }
                 )
 
-        return {
+        result = {
             "current_draft_id": selected_draft_id,
             "critic_score": eval_output.overall_score,
             "critic_feedback": feedback_list,
@@ -443,6 +443,11 @@ async def critic_node(
             "execution_steps": state.get("execution_steps", 0) + 1,
             "tokens_used": state.get("tokens_used", 0) + tokens_consumed,
         }
+        if next_action == "approval":
+            result["approval_item_type"] = "draft"
+            result["approval_item_id"] = selected_draft_id
+
+        return result
     finally:
         if not db_session:
             local_session.close()

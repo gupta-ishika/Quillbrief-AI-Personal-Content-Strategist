@@ -6,11 +6,12 @@ from langgraph.types import Command, interrupt
 from sqlalchemy.orm import Session
 
 from app.db.base import generate_uuid, utc_now
-from app.db.models import Approval, ContentPlan, Run
-from app.db.repositories.plans import create_plan_version
+from app.db.models import Approval, ContentPlan, Draft, Run
+from app.db.repositories.plans import create_draft_version, create_plan_version
 from app.db.session import SessionLocal
 from app.graph.state import ContentState
 from app.schemas.approvals import ApprovalDecisionRequest
+from app.tools.draft_checker import check_draft
 
 logger = logging.getLogger(__name__)
 
@@ -160,6 +161,41 @@ def approval_node(
                     if app_record:
                         app_record.resulting_item_id = new_plan.id
 
+        # Handle Draft decisions (VER-02, UT-11)
+        elif item_type == "draft":
+            draft = session.query(Draft).filter_by(id=item_id).first()
+            if draft:
+                if decision_val == "APPROVED":
+                    draft.status = "APPROVED"
+                elif decision_val == "REJECTED":
+                    draft.status = "REJECTED"
+                elif decision_val == "EDITED" and edited_content:
+                    draft.status = "SUPERSEDED"
+                    new_version = draft.version + 1
+                    content_str = (
+                        edited_content
+                        if isinstance(edited_content, str)
+                        else json.dumps(edited_content)
+                    )
+                    # Creator edits run deterministic checks only (ADR-023, FR-15)
+                    check_draft(content_str, draft.kind, draft.platform)
+                    new_draft = create_draft_version(
+                        db=session,
+                        lineage_id=draft.lineage_id,
+                        version=new_version,
+                        kind=draft.kind,
+                        platform=draft.platform,
+                        content=content_str,
+                        created_by="creator",
+                        previous_version_id=draft.id,
+                        plan_item_id=draft.plan_item_id,
+                        item_key=draft.item_key,
+                        status="APPROVED",
+                    )
+                    resulting_plan_id = new_draft.id
+                    if app_record:
+                        app_record.resulting_item_id = new_draft.id
+
         # Update run status back to RUNNING
         if run_id:
             run_rec = session.query(Run).filter_by(id=run_id).first()
@@ -174,17 +210,22 @@ def approval_node(
     total_steps = state.get("execution_steps", 0) + 1
     route_history = state.get("route_history", []) + ["approval"]
 
-    return {
+    result_state = {
         "approval_status": decision_val,
         "user_feedback": feedback_text,
         "approval_item_id": resulting_plan_id,
-        "current_plan_id": resulting_plan_id,
-        "current_plan_version": resulting_version,
-        "content_plan": resulting_plan_items,
         "execution_steps": total_steps,
         "route_history": route_history,
         "next_action": "supervisor",
     }
+    if item_type == "plan":
+        result_state["current_plan_id"] = resulting_plan_id
+        result_state["current_plan_version"] = resulting_version
+        result_state["content_plan"] = resulting_plan_items
+    elif item_type == "draft":
+        result_state["current_draft_id"] = resulting_plan_id
+
+    return result_state
 
 
 def resume_paused_run(
