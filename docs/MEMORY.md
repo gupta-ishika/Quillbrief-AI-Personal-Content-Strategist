@@ -8,16 +8,17 @@ Update this file after every task. DECISIONS.md holds permanent decisions. This 
 
 Phase 1 is 100% complete across both Backend and Frontend.
 Phase 2 (Writer and Critic loop) is 100% complete across both Backend and Frontend.
-Phase 3 (Goal decomposition and replanning) is in active development:
+Phase 3 (Goal decomposition and replanning) is 100% complete across both Backend and Frontend:
 - GRAPH-06 (Goal decomposition and replanning): Supervisor dynamically decomposes goals into goal-specific task lists (e.g. script drafting vs. repurposing vs. analytics vs. audience research - AT-08), executes automatic task progression (marking executing node's task DONE), dynamically replans on rejection, respects immutable DONE tasks, normalizes continuous 1..N positions, and synchronizes to SQLite `tasks` table.
 - GRAPH-07 (Skip and repeat logic): Supervisor skips Listener when comment insights are fresh and repeats Research when research is stale or data is thin (AT-05, AT-06); Analyst is skipped in weekly brief when there are no new posts (AT-07); tasks reflect SKIPPED and injected REPEAT actions dynamically.
 - GRAPH-08 (Depth levels and limits enforcement): Strict enforcement of all limits across Quick, Standard, and Deep depth levels (supervisor steps 15/30/50, tool steps per agent 4/6/10, review limits 2/3/3, tool call caps for comments, videos, searches, and pages, and per-call token input caps with heuristic trimming). Budget stops record limit_reached event and report unfinished tasks.
 - GRAPH-09 (Depth increase proposal and approval): Depth increase proposal approval flow (IT-05, IT-06, AT-05). When step budget is reached or data is thin, supervisor creates or routes to pending depth_increase approval; approval raises depth level for that run only (quick -> standard, standard -> deep), resumes run, and records run event note; rejection preserves depth limits.
 - UI-06 (Runs history and routing log timeline): Implemented RunsScreen matching DESIGN Section 4.8 with run history list (status, depth, tokens, timestamps, degraded notice), detail view with task list (1..N sequence) and interactive routing log timeline (from/to node, decided by model vs. code, eligible nodes, token metrics, fallback indicators, reasons), and active run Cancel and Interrupted run Resume actions.
+- TEST-03 (Verification): 100% verified all Phase 3 requirements (AT-08 goal decomposition, AT-06 stale vs fresh research, AT-05 thin data, IT-05 budget stop with unfinished tasks and depth increase proposal, and IT-06 depth increase approval raising limits for that run only).
 
 ## Current task
 
-Phase 3: Goal decomposition and replanning (TEST-03: Test thin data, stale data, limit reached and depth increase)
+Phase 4: Post-Mortem Analyst and strategy memory (DB-04: Add performance_metrics, analyst_findings and strategy_entries)
 
 ## Key decisions in force
 

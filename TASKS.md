@@ -96,7 +96,7 @@ Goal: different goals and starting states produce different routes without hardc
 - [x] GRAPH-08 Add depth levels and enforcement of all limits
 - [x] GRAPH-09 Add the depth increase proposal and its approval
 - [x] UI-06 Build the Runs history and the routing log timeline
-- [ ] TEST-03 Test thin data, stale data, limit reached and depth increase
+- [x] TEST-03 Test thin data, stale data, limit reached and depth increase
 
 ---
 
