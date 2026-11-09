@@ -18,7 +18,7 @@ Phase 3 (Goal decomposition and replanning) is 100% complete across both Backend
 
 ## Current task
 
-Phase 4: Post-Mortem Analyst and strategy memory (DB-04: Add performance_metrics, analyst_findings and strategy_entries)
+Phase 4: Post-Mortem Analyst and strategy memory (TOOL-06: Build the metrics calculator)
 
 ## Key decisions in force
 
@@ -60,6 +60,12 @@ Phase 4: Post-Mortem Analyst and strategy memory (DB-04: Add performance_metrics
 ---
 
 ## Update log
+
+- DB-04 done (2026-11-09): Added `performance_metrics`, `analyst_findings`, and `strategy_entries` tables, check constraints (`source IN ('public', 'owner')`, `confidence IN ('low', 'moderate', 'high')`, `status IN ('active', 'superseded')`), unique and index definitions (`(draft_id, metric_name, collected_at)`, `(creator_id, key, status)`):
+  - Added models in `backend/app/db/models.py` and relationships to `Creator`, `Run`, and `Draft`.
+  - Added Alembic migration `62a271d6418a_create_analytics_and_strategy_tables.py` and applied to SQLite database.
+  - Implemented repositories in `backend/app/db/repositories/analytics.py` with superseding lineage semantics for strategy memory (`create_or_update_strategy_entry` supersedes older active rows for the same creator and key).
+  - Verified with 3 unit tests in `backend/tests/test_analytics_db.py`, full suite (217 tests passing), 0 Ruff errors, 0 Mypy errors.
 
 - GRAPH-06 done (2026-11-06): Implemented task list creation and dynamic replanning in Supervisor:
   - Goal decomposition (`decompose_goal_to_tasks`): Analyzes `user_goal` to generate goal-tailored task lists across 5 distinct categories (script drafting, content repurposing, performance analytics, research discovery, comprehensive planning), satisfying AT-08 ("two different goals produce different task lists").

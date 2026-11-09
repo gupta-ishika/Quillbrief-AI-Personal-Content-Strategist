@@ -104,7 +104,7 @@ Goal: different goals and starting states produce different routes without hardc
 
 Goal: close the feedback loop.
 
-- [ ] DB-04 Add performance_metrics, analyst_findings and strategy_entries
+- [x] DB-04 Add performance_metrics, analyst_findings and strategy_entries
 - [ ] TOOL-06 Build the metrics calculator
 - [ ] AGT-06 Build the Post-Mortem Analyst (ReAct) with sample size and confidence
 - [ ] GRAPH-10 Route Analyst findings to the Strategist and store strategy changes
