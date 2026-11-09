@@ -1,3 +1,16 @@
+from app.db.repositories.analytics import (
+    create_analyst_finding,
+    create_or_update_strategy_entry,
+    create_performance_metric,
+    get_active_strategy_entries,
+    get_active_strategy_entry,
+    get_all_findings,
+    get_findings_for_draft,
+    get_findings_for_run,
+    get_metrics_by_platform,
+    get_metrics_for_draft,
+    get_strategy_history,
+)
 from app.db.repositories.content import (
     create_comment,
     create_comment_insight,
@@ -78,4 +91,15 @@ __all__ = [
     "get_draft_by_id",
     "get_drafts_by_lineage",
     "update_draft_status",
+    "create_performance_metric",
+    "get_metrics_for_draft",
+    "get_metrics_by_platform",
+    "create_analyst_finding",
+    "get_findings_for_run",
+    "get_findings_for_draft",
+    "get_all_findings",
+    "create_or_update_strategy_entry",
+    "get_active_strategy_entries",
+    "get_active_strategy_entry",
+    "get_strategy_history",
 ]

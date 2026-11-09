@@ -42,6 +42,9 @@ class Creator(Base):
     comment_insights: Mapped[list["CommentInsight"]] = relationship(
         "CommentInsight", back_populates="creator"
     )
+    strategy_entries: Mapped[list["StrategyEntry"]] = relationship(
+        "StrategyEntry", back_populates="creator", cascade="all, delete-orphan"
+    )
 
 
 class Setting(Base):
@@ -115,6 +118,9 @@ class Run(Base):
         "TokenUsage", back_populates="run", cascade="all, delete-orphan"
     )
     approvals: Mapped[list["Approval"]] = relationship("Approval", back_populates="run")
+    analyst_findings: Mapped[list["AnalystFinding"]] = relationship(
+        "AnalystFinding", back_populates="run", cascade="all, delete-orphan"
+    )
 
 
 class Task(Base):
@@ -433,6 +439,12 @@ class Draft(Base):
     critic_evaluation: Mapped["CriticEvaluation | None"] = relationship(
         "CriticEvaluation", back_populates="draft", uselist=False, cascade="all, delete-orphan"
     )
+    performance_metrics: Mapped[list["PerformanceMetric"]] = relationship(
+        "PerformanceMetric", back_populates="draft", cascade="all, delete-orphan"
+    )
+    analyst_findings: Mapped[list["AnalystFinding"]] = relationship(
+        "AnalystFinding", back_populates="draft"
+    )
 
 
 class CriticEvaluation(Base):
@@ -498,3 +510,80 @@ class CacheEntry(Base):
     key: Mapped[str] = mapped_column(String(255), primary_key=True)
     value_json: Mapped[Any] = mapped_column(JSON)
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class PerformanceMetric(Base):
+    __tablename__ = "performance_metrics"
+    __table_args__ = (
+        CheckConstraint("source IN ('public', 'owner')", name="ck_performance_metrics_source"),
+        UniqueConstraint(
+            "draft_id",
+            "metric_name",
+            "collected_at",
+            name="uq_performance_metrics_draft_metric_collected",
+        ),
+    )
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
+    draft_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("drafts.id", ondelete="CASCADE")
+    )
+    platform: Mapped[str] = mapped_column(String(50))
+    metric_name: Mapped[str] = mapped_column(String(100))
+    value: Mapped[float] = mapped_column(Float)
+    source: Mapped[str] = mapped_column(String(50), default="public")
+    collected_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+
+    draft: Mapped["Draft"] = relationship("Draft", back_populates="performance_metrics")
+
+
+class AnalystFinding(Base):
+    __tablename__ = "analyst_findings"
+    __table_args__ = (
+        CheckConstraint(
+            "confidence IN ('low', 'moderate', 'high')",
+            name="ck_analyst_findings_confidence",
+        ),
+    )
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
+    run_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("runs.id", ondelete="CASCADE")
+    )
+    draft_id: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("drafts.id", ondelete="SET NULL"), nullable=True
+    )
+    finding: Mapped[str] = mapped_column(Text)
+    recommendation: Mapped[str] = mapped_column(Text)
+    confidence: Mapped[str] = mapped_column(String(50))
+    sample_size: Mapped[int] = mapped_column(Integer)
+    evidence_json: Mapped[Any] = mapped_column(JSON, default=dict)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+
+    run: Mapped["Run"] = relationship("Run", back_populates="analyst_findings")
+    draft: Mapped["Draft | None"] = relationship("Draft", back_populates="analyst_findings")
+
+
+class StrategyEntry(Base):
+    __tablename__ = "strategy_entries"
+    __table_args__ = (
+        CheckConstraint(
+            "status IN ('active', 'superseded')",
+            name="ck_strategy_entries_status",
+        ),
+        Index("ix_strategy_entries_creator_key_status", "creator_id", "key", "status"),
+    )
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
+    creator_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("creators.id", ondelete="CASCADE")
+    )
+    key: Mapped[str] = mapped_column(String(100))
+    value_json: Mapped[Any] = mapped_column(JSON)
+    reason: Mapped[str] = mapped_column(Text)
+    supporting_finding_ids_json: Mapped[Any] = mapped_column(JSON, default=list)
+    status: Mapped[str] = mapped_column(String(50), default="active")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+
+    creator: Mapped["Creator"] = relationship("Creator", back_populates="strategy_entries")
+
