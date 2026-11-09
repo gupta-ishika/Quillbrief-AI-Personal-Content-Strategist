@@ -10,6 +10,7 @@ import { HomeScreen } from './components/home/HomeScreen';
 import { ApprovalsInbox } from './components/approvals/ApprovalsInbox';
 import { SettingsScreen } from './components/settings/SettingsScreen';
 import { DraftsLibrary } from './components/drafts/DraftsLibrary';
+import { RunsScreen } from './components/runs/RunsScreen';
 import { PlaceholderScreen } from './components/common/PlaceholderScreen';
 
 const queryClient = new QueryClient({
@@ -139,11 +140,7 @@ export const AppContent: React.FC = () => {
         />
       )}
       {currentTab === 'runs' && (
-        <PlaceholderScreen
-          title="Execution Runs"
-          description="Supervisor routing history, task lists, and token usage timelines."
-          phase="Phase 3"
-        />
+        <RunsScreen onNavigateToApprovals={handleNavigateToApprovals} />
       )}
       {currentTab === 'settings' && <SettingsScreen />}
     </AppLayout>
