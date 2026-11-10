@@ -18,7 +18,7 @@ Phase 3 (Goal decomposition and replanning) is 100% complete across both Backend
 
 ## Current task
 
-Phase 4: Post-Mortem Analyst and strategy memory (TOOL-06: Build the metrics calculator)
+Phase 4: Post-Mortem Analyst and strategy memory (AGT-06: Build the Post-Mortem Analyst (ReAct) with sample size and confidence)
 
 ## Key decisions in force
 
@@ -60,6 +60,14 @@ Phase 4: Post-Mortem Analyst and strategy memory (TOOL-06: Build the metrics cal
 ---
 
 ## Update log
+
+- TOOL-06 done (2026-11-09): Built the deterministic metrics calculator (`backend/app/tools/metrics_calculator.py`) implementing UT-08:
+  - Statistical calculations: mean, median, min, max, standard deviation, and batch summaries with zero LLM tokens.
+  - Cohort comparison: treatment vs. baseline, absolute difference, percentage change, direction ('higher', 'lower', 'equal'), and human-readable summary.
+  - Sample size tracking and confidence labels: low (<3 samples), moderate (3-9 samples), and high (>=10 samples).
+  - Correlation analysis: Pearson correlation coefficient with explicit PRD FR-8 causation distinction note ("Correlation does not imply causation").
+  - Registered as `metrics_calculator` tool for the `analyst` agent in `MCPAdapter`.
+  - Verified with 6 unit tests in `backend/tests/test_metrics_calculator.py`, full suite (223 tests passing), 0 Ruff errors, 0 Mypy errors.
 
 - DB-04 done (2026-11-09): Added `performance_metrics`, `analyst_findings`, and `strategy_entries` tables, check constraints (`source IN ('public', 'owner')`, `confidence IN ('low', 'moderate', 'high')`, `status IN ('active', 'superseded')`), unique and index definitions (`(draft_id, metric_name, collected_at)`, `(creator_id, key, status)`):
   - Added models in `backend/app/db/models.py` and relationships to `Creator`, `Run`, and `Draft`.
