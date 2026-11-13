@@ -155,3 +155,4 @@ def get_strategy_history(
     if key:
         query = query.filter_by(key=key)
     return query.order_by(StrategyEntry.created_at.desc()).all()
+

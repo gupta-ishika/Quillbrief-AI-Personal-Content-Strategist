@@ -13,6 +13,7 @@ from sqlalchemy import (
     String,
     Text,
     UniqueConstraint,
+    text,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -120,6 +121,9 @@ class Run(Base):
     approvals: Mapped[list["Approval"]] = relationship("Approval", back_populates="run")
     analyst_findings: Mapped[list["AnalystFinding"]] = relationship(
         "AnalystFinding", back_populates="run", cascade="all, delete-orphan"
+    )
+    weekly_briefs: Mapped[list["WeeklyBrief"]] = relationship(
+        "WeeklyBrief", back_populates="run", cascade="all, delete-orphan"
     )
 
 
@@ -356,6 +360,9 @@ class ContentPlan(Base):
     items: Mapped[list["PlanItem"]] = relationship(
         "PlanItem", back_populates="plan", cascade="all, delete-orphan"
     )
+    weekly_briefs: Mapped[list["WeeklyBrief"]] = relationship(
+        "WeeklyBrief", back_populates="plan"
+    )
 
 
 class PlanItem(Base):
@@ -586,4 +593,79 @@ class StrategyEntry(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
 
     creator: Mapped["Creator"] = relationship("Creator", back_populates="strategy_entries")
+
+
+class WeeklyBrief(Base):
+    __tablename__ = "weekly_briefs"
+    __table_args__ = (
+        CheckConstraint(
+            "trigger IN ('scheduled', 'manual')",
+            name="ck_weekly_briefs_trigger",
+        ),
+        CheckConstraint(
+            "status IN ('GENERATED', 'ARCHIVED')",
+            name="ck_weekly_briefs_status",
+        ),
+        Index(
+            "uq_weekly_briefs_scheduled_period",
+            "period_key",
+            unique=True,
+            sqlite_where=text("trigger = 'scheduled'"),
+        ),
+    )
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
+    run_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("runs.id", ondelete="CASCADE")
+    )
+    trigger: Mapped[str] = mapped_column(String(50))
+    period_key: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    content_markdown: Mapped[str] = mapped_column(Text)
+    plan_id: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("content_plans.id", ondelete="SET NULL"), nullable=True
+    )
+    status: Mapped[str] = mapped_column(String(50), default="GENERATED")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+    read_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    run: Mapped["Run"] = relationship("Run", back_populates="weekly_briefs")
+    plan: Mapped["ContentPlan | None"] = relationship("ContentPlan", back_populates="weekly_briefs")
+
+
+class OAuthState(Base):
+    __tablename__ = "oauth_states"
+    __table_args__ = (
+        CheckConstraint(
+            "platform IN ('youtube', 'instagram')",
+            name="ck_oauth_states_platform",
+        ),
+        CheckConstraint(
+            "return_to IN ('settings', 'onboarding')",
+            name="ck_oauth_states_return_to",
+        ),
+    )
+
+    state_hash: Mapped[str] = mapped_column(String(64), primary_key=True)
+    platform: Mapped[str] = mapped_column(String(50), default="youtube")
+    return_to: Mapped[str] = mapped_column(String(50))
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+
+
+class DeletionJob(Base):
+    __tablename__ = "deletion_jobs"
+    __table_args__ = (
+        CheckConstraint(
+            "status IN ('PENDING', 'RUNNING', 'COMPLETED', 'PARTIAL', 'FAILED')",
+            name="ck_deletion_jobs_status",
+        ),
+    )
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
+    status: Mapped[str] = mapped_column(String(50), default="PENDING")
+    steps_json: Mapped[Any] = mapped_column(JSON, default=list)
+    requested_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
 
