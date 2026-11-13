@@ -106,7 +106,7 @@ Goal: close the feedback loop.
 
 - [x] DB-04 Add performance_metrics, analyst_findings and strategy_entries
 - [x] TOOL-06 Build the metrics calculator
-- [ ] AGT-06 Build the Post-Mortem Analyst (ReAct) with sample size and confidence
+- [x] AGT-06 Build the Post-Mortem Analyst (ReAct) with sample size and confidence
 - [ ] GRAPH-10 Route Analyst findings to the Strategist and store strategy changes
 - [ ] API-04 Implement insights, findings and strategy endpoints
 - [ ] UI-07 Build the Insights screen

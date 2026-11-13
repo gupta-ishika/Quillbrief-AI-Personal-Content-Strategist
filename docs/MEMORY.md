@@ -18,7 +18,7 @@ Phase 3 (Goal decomposition and replanning) is 100% complete across both Backend
 
 ## Current task
 
-Phase 4: Post-Mortem Analyst and strategy memory (AGT-06: Build the Post-Mortem Analyst (ReAct) with sample size and confidence)
+Phase 4: Post-Mortem Analyst and strategy memory (GRAPH-10: Route Analyst findings to the Strategist and store strategy changes)
 
 ## Key decisions in force
 
@@ -60,6 +60,16 @@ Phase 4: Post-Mortem Analyst and strategy memory (AGT-06: Build the Post-Mortem 
 ---
 
 ## Update log
+
+- AGT-06 done (2026-11-13): Built the Post-Mortem Analyst agent (`backend/app/agents/analyst.py`, `backend/app/tools/analyst_tools.py`) implementing PRD FR-8, UT-08, IT-07, IT-21, and IT-23:
+  - ReAct loop with depth-budget enforcement (Quick 4, Standard 6, Deep 10 tool steps) and 6,000 token input cap.
+  - Identification of posted content strictly by URL or platform ID, never by title alone.
+  - Dedicated handling for unlinked posted drafts: reports that automated metrics are unavailable until linked, producing no misleading analytics (IT-23).
+  - Platform capability handling: reports no performance data for LinkedIn/X (IT-21); falls back to public metrics with clear notification when YouTube owner access is unconfigured (PRD 5.1).
+  - Sample size and confidence attribution ('low' for <3, 'moderate' for 3-9, 'high' for >=10) and distinction between correlation and causation.
+  - Tools registered in `MCPAdapter`: `metrics_calculator`, `youtube_analytics`, `db_load_metrics`, `db_save_metrics`.
+  - Database persistence for `analyst_findings` and deterministic fallback on LLM or format failure.
+  - Verified with 9 unit tests in `backend/tests/test_analyst_agent.py`, 0 Ruff errors, 0 Mypy errors.
 
 - TOOL-06 done (2026-11-09): Built the deterministic metrics calculator (`backend/app/tools/metrics_calculator.py`) implementing UT-08:
   - Statistical calculations: mean, median, min, max, standard deviation, and batch summaries with zero LLM tokens.
