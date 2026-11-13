@@ -57,6 +57,8 @@ AGENT_TOKEN_LIMITS: dict[str, int] = {
     "strategist": 6000,
     "writer": 4000,
     "critic": 3000,
+    "analyst": 6000,
+    "repurposer": 4000,
 }
 
 

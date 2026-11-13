@@ -43,6 +43,7 @@ class ContentState(TypedDict, total=False):
     # Strategy & post-mortem
     strategy: dict[str, Any]
     performance_insights: dict[str, Any]
+    analyst_findings: list[dict[str, Any]]
     weekly_brief_id: str | None
 
     # Approval and human feedback
