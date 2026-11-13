@@ -5,6 +5,7 @@ from typing import Any
 from langgraph.graph import END, START, StateGraph
 from sqlalchemy.orm import Session
 
+from app.agents.analyst import analyst_node
 from app.agents.critic import critic_node
 from app.agents.listener import listener_node
 from app.agents.research import research_node
@@ -18,7 +19,7 @@ from app.graph.supervisor import supervisor_node
 def route_from_supervisor(state: ContentState) -> str:
     """Extracts next node decided by Supervisor, mapping to valid node or END."""
     action = state.get("next_action", "END")
-    if action in ("listener", "research", "strategist", "writer", "approval"):
+    if action in ("listener", "research", "strategist", "writer", "approval", "analyst"):
         return action
     return END
 
@@ -68,6 +69,9 @@ def create_content_graph(
     async def bound_critic(state: ContentState) -> dict[str, Any]:
         return await critic_node(state, db_session=db_session)
 
+    async def bound_analyst(state: ContentState) -> dict[str, Any]:
+        return await analyst_node(state, db_session=db_session)
+
     def bound_approval(state: ContentState) -> dict[str, Any]:
         return approval_node(state, db_session=db_session)
 
@@ -77,6 +81,7 @@ def create_content_graph(
     workflow.add_node("strategist", bound_strategist)
     workflow.add_node("writer", bound_writer)
     workflow.add_node("critic", bound_critic)
+    workflow.add_node("analyst", bound_analyst)
     workflow.add_node("approval", bound_approval)
 
     # 2. Register edges
@@ -91,6 +96,7 @@ def create_content_graph(
             "strategist": "strategist",
             "writer": "writer",
             "approval": "approval",
+            "analyst": "analyst",
             END: END,
         },
     )
@@ -98,6 +104,7 @@ def create_content_graph(
     workflow.add_edge("listener", "supervisor")
     workflow.add_edge("research", "supervisor")
     workflow.add_edge("strategist", "supervisor")
+    workflow.add_edge("analyst", "supervisor")
     workflow.add_edge("writer", "critic")
 
     workflow.add_conditional_edges(

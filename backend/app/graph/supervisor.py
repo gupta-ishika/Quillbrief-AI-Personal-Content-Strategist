@@ -76,15 +76,27 @@ def calculate_eligible_nodes(state: ContentState) -> list[NodeName]:
         if task_list and all(t.get("status") in ("DONE", "SKIPPED") for t in task_list):
             return ["END"]
 
-    # Rule 4: Post-Mortem / Weekly Brief Analyst skip logic (AT-07)
-    if run_type in ("weekly_brief", "post_mortem") and not state.get("performance_insights"):
+    # Rule 4: Post-Mortem / Weekly Brief Analyst skip logic (AT-07, GRAPH-10)
+    if not state.get("performance_insights"):
         has_new_posts = state.get("has_new_posts")
         new_posts_count = state.get("new_posts_count")
-        if has_new_posts is False or new_posts_count == 0:
-            # Skip analyst when there are no new posts (AT-07)
-            pass
-        elif has_new_posts is True or (new_posts_count is not None and new_posts_count > 0):
-            return ["analyst"]
+        for task in task_list:
+            if task.get("status") == "TODO":
+                if task.get("agent") == "analyst":
+                    if has_new_posts is False or new_posts_count == 0:
+                        break
+                    return ["analyst"]
+                break
+        if run_type in ("weekly_brief", "post_mortem"):
+            if has_new_posts is False or new_posts_count == 0:
+                # Skip analyst when there are no new posts (AT-07)
+                pass
+            elif has_new_posts is True or (new_posts_count is not None and new_posts_count > 0):
+                return ["analyst"]
+
+    # Route Analyst findings to the Strategist (GRAPH-10, IT-08)
+    if state.get("analyst_findings") and not current_plan_id:
+        return ["strategist"]
 
     # Rule 5: Freshness & Thinness checks (AT-01, AT-02, AT-05, AT-06)
     has_insights = bool(comment_insights)
