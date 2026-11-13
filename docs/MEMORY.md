@@ -16,15 +16,19 @@ Phase 3 (Goal decomposition and replanning) is 100% complete across both Backend
 - UI-06 (Runs history and routing log timeline): Implemented RunsScreen matching DESIGN Section 4.8 with run history list (status, depth, tokens, timestamps, degraded notice), detail view with task list (1..N sequence) and interactive routing log timeline (from/to node, decided by model vs. code, eligible nodes, token metrics, fallback indicators, reasons), and active run Cancel and Interrupted run Resume actions.
 - TEST-03 (Verification): 100% verified all Phase 3 requirements (AT-08 goal decomposition, AT-06 stale vs fresh research, AT-05 thin data, IT-05 budget stop with unfinished tasks and depth increase proposal, and IT-06 depth increase approval raising limits for that run only).
 
-Phase 4 (Post-Mortem Analyst and strategy memory) in progress:
-- DB-04: Created `performance_metrics`, `analyst_findings`, and `strategy_entries` tables with migrations and repositories.
-- TOOL-06: Deterministic metrics calculator with averages, medians, std dev, cohort comparison, confidence labels, and Pearson correlation.
-- AGT-06: ReAct Post-Mortem Analyst agent with sample size, confidence, step caps, and unlinked post handling.
-- GRAPH-10: Route Analyst findings to the Strategist and store strategy changes (supervisor routes to analyst on analytics goals, routes analyst findings to strategist, strategist adapts plan items with reasoning and persists active/superseded strategy memory).
+Phase 4 (Post-Mortem Analyst and strategy memory) is 100% complete across Backend and Frontend:
+- DB-04 (Analytics and Strategy Schema): Added `performance_metrics`, `analyst_findings`, and `strategy_entries` tables with CheckConstraints, unique/foreign keys, Alembic migration, and repository methods supporting lineage superseding.
+- TOOL-06 (Metrics Calculator): Built zero-LLM deterministic statistical calculator for averages, medians, std dev, cohort comparison (delta, % change, direction), sample size tracking, confidence scoring (`low`, `moderate`, `high`), and Pearson correlation with FR-8 causation warning.
+- AGT-06 (Post-Mortem Analyst): Built ReAct loop for Analyst agent with 6,000 token input heuristic, step limits (Quick 4, Standard 6, Deep 10), platform capability handling (LinkedIn/X produce no data), and unlinked post skipping (`posted_ref == "none"`).
+- GRAPH-10 (Supervisor & Strategist Integration): Registered `analyst` node in LangGraph, updated Supervisor eligible node calculation to route to Analyst on analytics goals and route Analyst findings to Strategist, and updated Strategist to adapt content plans and store active/superseded strategy rules in SQLite.
+- API-04 (Insights, Findings, and Strategy Endpoints): Implemented `GET /api/v1/insights/comments` (enforcing Channel Rule ADR-032 and 90-day comment retention ADR-033), `GET /api/v1/findings`, and `GET /api/v1/strategy` (with `?include=history`).
+- API-07 (Link-Posted & Unlinked Post Handling): Validated `POST /api/v1/drafts/{id}/link-posted` with URL or platform ID (409 NOT_POSTED, 422 LINK_REQUIRED), strictly matching by URL/ID and never by title alone.
+- UI-07 (Insights Screen): Built React Insights Screen matching DESIGN Section 4.7 with KPI cards, Comment Themes tab (with 90-day retention indicator), Analyst Findings tab (with confidence filter and evidence viewer), Strategy Memory tab (with history toggle), and full test coverage.
+- TEST-04 (Verification): 100% verified IT-07 (mark as posted allows processing), IT-08 (findings change plan and record reasons), IT-21 (platform access & LinkedIn/X notice), IT-23 (unlinked posted draft produces no misleading analytics, processed after linking), and closed-loop feedback end-to-end.
 
 ## Current task
 
-Phase 4: Post-Mortem Analyst and strategy memory (API-04: Implement insights, findings and strategy endpoints)
+Phase 5: Weekly Brief, scheduler and credentials (DB-05: Add weekly_briefs, oauth_states, and deletion_jobs tables)
 
 ## Key decisions in force
 

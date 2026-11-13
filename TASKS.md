@@ -108,10 +108,10 @@ Goal: close the feedback loop.
 - [x] TOOL-06 Build the metrics calculator
 - [x] AGT-06 Build the Post-Mortem Analyst (ReAct) with sample size and confidence
 - [x] GRAPH-10 Route Analyst findings to the Strategist and store strategy changes
-- [ ] API-04 Implement insights, findings and strategy endpoints
-- [ ] UI-07 Build the Insights screen
-- [ ] API-07 Implement link-posted and make the Analyst skip unlinked posts with a clear message, matching by URL or platform ID and never by title
-- [ ] TEST-04 Test that findings change the next plan, and that unlinked posts produce no misleading analytics
+- [x] API-04 Implement insights, findings and strategy endpoints
+- [x] UI-07 Build the Insights screen
+- [x] API-07 Implement link-posted and make the Analyst skip unlinked posts with a clear message, matching by URL or platform ID and never by title
+- [x] TEST-04 Test that findings change the next plan, and that unlinked posts produce no misleading analytics
 - [ ] STYLE-01 Deferred: observed-style analysis of the creator's content. Blocked until MODEL-01, MCP-04 and the stored-profile decision in ADR-030 are complete
 
 ---
