@@ -11,6 +11,7 @@ import { ApprovalsInbox } from './components/approvals/ApprovalsInbox';
 import { SettingsScreen } from './components/settings/SettingsScreen';
 import { DraftsLibrary } from './components/drafts/DraftsLibrary';
 import { RunsScreen } from './components/runs/RunsScreen';
+import { InsightsScreen } from './components/insights/InsightsScreen';
 import { PlaceholderScreen } from './components/common/PlaceholderScreen';
 
 const queryClient = new QueryClient({
@@ -132,13 +133,7 @@ export const AppContent: React.FC = () => {
         />
       )}
       {currentTab === 'library' && <DraftsLibrary />}
-      {currentTab === 'insights' && (
-        <PlaceholderScreen
-          title="Audience Insights"
-          description="Extracted comment themes, sentiment patterns, and analyst findings."
-          phase="Phase 4"
-        />
-      )}
+      {currentTab === 'insights' && <InsightsScreen />}
       {currentTab === 'runs' && (
         <RunsScreen onNavigateToApprovals={handleNavigateToApprovals} />
       )}

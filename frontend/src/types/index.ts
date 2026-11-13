@@ -330,6 +330,50 @@ export interface HealthResponse {
   interrupted_runs_count: number;
 }
 
+export interface CommentInsightExample {
+  comment_id: string;
+  text: string | null;
+  like_count: number;
+  published_at: string;
+  available: boolean;
+}
+
+export interface CommentInsightResponse {
+  id: string;
+  creator_id: string;
+  run_id: string;
+  theme_label: string;
+  comment_count: number;
+  examples: CommentInsightExample[];
+  coverage_analyzed: number;
+  coverage_total: number;
+  status: 'current' | 'superseded';
+  created_at: string;
+}
+
+export interface AnalystFindingResponse {
+  id: string;
+  run_id: string;
+  draft_id?: string | null;
+  finding: string;
+  recommendation: string;
+  confidence: 'low' | 'moderate' | 'high';
+  sample_size: number;
+  evidence: Record<string, unknown>;
+  created_at: string;
+}
+
+export interface StrategyEntryResponse {
+  id: string;
+  creator_id: string;
+  key: string;
+  value: unknown;
+  reason: string;
+  supporting_finding_ids: string[];
+  status: 'active' | 'superseded';
+  created_at: string;
+}
+
 export interface ApiError {
   code: string;
   message: string;

@@ -1,8 +1,10 @@
 import {
+  AnalystFindingResponse,
   ApprovalDecisionRequest,
   ApprovalDecisionResponse,
   ApprovalResponse,
   ChannelResolveResponse,
+  CommentInsightResponse,
   CreatorChannelItem,
   DepthLevel,
   DraftEditRequest,
@@ -20,6 +22,7 @@ import {
   RunResponse,
   SettingsResponse,
   SettingsUpdateRequest,
+  StrategyEntryResponse,
 } from '../types';
 
 export class ApiClientError extends Error {
@@ -261,4 +264,33 @@ export const apiClient = {
       method: 'POST',
       body: JSON.stringify(data),
     }),
+
+  // Insights & Strategy Memory
+  getCommentInsights: (): Promise<CommentInsightResponse[]> =>
+    request<CommentInsightResponse[]>('/insights/comments'),
+
+  getFindings: (params?: {
+    draft_id?: string;
+    run_id?: string;
+    limit?: number;
+  }): Promise<AnalystFindingResponse[]> => {
+    const searchParams = new URLSearchParams();
+    if (params?.draft_id) searchParams.append('draft_id', params.draft_id);
+    if (params?.run_id) searchParams.append('run_id', params.run_id);
+    if (params?.limit) searchParams.append('limit', String(params.limit));
+    const qs = searchParams.toString();
+    return request<AnalystFindingResponse[]>(`/findings${qs ? `?${qs}` : ''}`);
+  },
+
+  getStrategy: (params?: {
+    include?: 'history';
+  }): Promise<StrategyEntryResponse[]> => {
+    const searchParams = new URLSearchParams();
+    if (params?.include) searchParams.append('include', params.include);
+    const qs = searchParams.toString();
+    return request<StrategyEntryResponse[]>(`/strategy${qs ? `?${qs}` : ''}`);
+  },
+
+  getStrategyByKey: (key: string): Promise<StrategyEntryResponse> =>
+    request<StrategyEntryResponse>(`/strategy/${encodeURIComponent(key)}`),
 };
