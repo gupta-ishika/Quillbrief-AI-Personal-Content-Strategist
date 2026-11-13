@@ -16,9 +16,15 @@ Phase 3 (Goal decomposition and replanning) is 100% complete across both Backend
 - UI-06 (Runs history and routing log timeline): Implemented RunsScreen matching DESIGN Section 4.8 with run history list (status, depth, tokens, timestamps, degraded notice), detail view with task list (1..N sequence) and interactive routing log timeline (from/to node, decided by model vs. code, eligible nodes, token metrics, fallback indicators, reasons), and active run Cancel and Interrupted run Resume actions.
 - TEST-03 (Verification): 100% verified all Phase 3 requirements (AT-08 goal decomposition, AT-06 stale vs fresh research, AT-05 thin data, IT-05 budget stop with unfinished tasks and depth increase proposal, and IT-06 depth increase approval raising limits for that run only).
 
+Phase 4 (Post-Mortem Analyst and strategy memory) in progress:
+- DB-04: Created `performance_metrics`, `analyst_findings`, and `strategy_entries` tables with migrations and repositories.
+- TOOL-06: Deterministic metrics calculator with averages, medians, std dev, cohort comparison, confidence labels, and Pearson correlation.
+- AGT-06: ReAct Post-Mortem Analyst agent with sample size, confidence, step caps, and unlinked post handling.
+- GRAPH-10: Route Analyst findings to the Strategist and store strategy changes (supervisor routes to analyst on analytics goals, routes analyst findings to strategist, strategist adapts plan items with reasoning and persists active/superseded strategy memory).
+
 ## Current task
 
-Phase 4: Post-Mortem Analyst and strategy memory (GRAPH-10: Route Analyst findings to the Strategist and store strategy changes)
+Phase 4: Post-Mortem Analyst and strategy memory (API-04: Implement insights, findings and strategy endpoints)
 
 ## Key decisions in force
 
